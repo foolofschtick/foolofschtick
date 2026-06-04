@@ -22,6 +22,10 @@
   a:hover {
     text-decoration: underline;
   }
+  .letter {
+    display: inline-block;
+    will-change: transform;
+  }
 </style>
 </head>
 <body>
@@ -33,6 +37,84 @@
 <a href="https://www.tiktok.com/@foolofschtick?_r=1&_t=ZT-96t2iCgbA7y">TikTok</a>
 <a href="https://www.facebook.com/61590695035991/">Facebook</a>
 <a href="mailto:contact@foolofschtick.com">Email</a>
+
+<script>
+  const rand = (min, max) => Math.random() * (max - min) + min;
+
+  // Grab every element we want to ruin
+  const targets = document.querySelectorAll('h1, a');
+  const allLetters = [];
+
+  targets.forEach(el => {
+    const rawText = el.textContent;
+    el.innerHTML = '';
+
+    for (let i = 0; i < rawText.length; i++) {
+      const span = document.createElement('span');
+      span.className = 'letter';
+      span.textContent = rawText[i] === ' ' ? '\u00A0' : rawText[i];
+      el.appendChild(span);
+
+      allLetters.push({
+        el: span,
+        x: 0, y: 0, r: 0,
+        vx: 0, vy: 0, vr: 0,
+        tx: 0, ty: 0, tr: 0
+      });
+    }
+  });
+
+  let isGlitching = false;
+
+  function unleashChaos() {
+    if (isGlitching) return;
+    isGlitching = true;
+
+    allLetters.forEach(l => {
+      l.tx = rand(-50, 50);
+      l.ty = rand(-35, 35);
+      l.tr = rand(-20, 20);
+    });
+
+    setTimeout(() => {
+      allLetters.forEach(l => { l.tx = 0; l.ty = 0; l.tr = 0; });
+      setTimeout(() => {
+        isGlitching = false;
+        scheduleGlitch();
+      }, 1500);
+    }, 2000);
+  }
+
+  function scheduleGlitch() {
+    const delay = rand(10000, 20000);
+    setTimeout(unleashChaos, delay);
+  }
+
+  const TENSION = 0.06;
+  const FRICTION = 0.82;
+
+  function springLoop() {
+    allLetters.forEach(l => {
+      const ax = (l.tx - l.x) * TENSION;
+      const ay = (l.ty - l.y) * TENSION;
+      const ar = (l.tr - l.r) * TENSION;
+
+      l.vx = (l.vx + ax) * FRICTION;
+      l.vy = (l.vy + ay) * FRICTION;
+      l.vr = (l.vr + ar) * FRICTION;
+
+      l.x += l.vx;
+      l.y += l.vy;
+      l.r += l.vr;
+
+      l.el.style.transform = `translate3d(${l.x.toFixed(2)}px, ${l.y.toFixed(2)}px, 0) rotate(${l.r.toFixed(2)}deg)`;
+    });
+    requestAnimationFrame(springLoop);
+  }
+
+  springLoop();
+  scheduleGlitch();
+</script>
 
 </body>
 </html>
