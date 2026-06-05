@@ -249,11 +249,12 @@
   const ctx = canvas.getContext('2d');
 
   const BROWNS = ['#3d2817','#5d3a1a','#8b4513','#a0522d','#cd853f','#d2691e','#654321','#4e342e'];
+  const WALL_THICKNESS = 12;
 
   const BUCKET_POINTS = [
-    {x:-70,y:-80},{x:-70,y:-45},{x:-70,y:-10},{x:-70,y:25},
-    {x:-35,y:60},{x:0,y:75},{x:35,y:60},
-    {x:70,y:25},{x:70,y:-10},{x:70,y:-45},{x:70,y:-80}
+    {x:-180,y:-220}, {x:-180,y:-176}, {x:-180,y:-132}, {x:-180,y:-88}, {x:-180,y:-44}, {x:-180,y:0},
+    {x:-140,y:60}, {x:-80,y:110}, {x:-20,y:140}, {x:20,y:140}, {x:80,y:110}, {x:140,y:60},
+    {x:180,y:0}, {x:180,y:-44}, {x:180,y:-88}, {x:180,y:-132}, {x:180,y:-176}, {x:180,y:-220}
   ];
 
   let particles = [], segments = [], grid = {};
@@ -288,11 +289,11 @@
 
   function initPhysics() {
     canvas.width=window.innerWidth; canvas.height=window.innerHeight;
-    bucket.restX=canvas.width/2; bucket.restY=canvas.height*0.35;
+    bucket.restX=canvas.width/2; bucket.restY=canvas.height*0.38;
     bucket.x=bucket.restX; bucket.y=bucket.restY;
     bucket.vx=0; bucket.vy=0;
     segments=[];
-    for(let i=0;i<10;i++) {
+    for(let i=0;i<17;i++) {
       const p1=BUCKET_POINTS[i], p2=BUCKET_POINTS[i+1];
       segments.push({p1:p1,p2:p2,mx:(p1.x+p2.x)/2,my:(p1.y+p2.y)/2});
     }
@@ -300,8 +301,8 @@
 
   function updatePhysics() {
     if(pouring) {
-      const count=3+Math.floor(Math.random()*3);
-      for(let i=0;i<count;i++) particles.push(new Particle(bucket.restX+(Math.random()-0.5)*140,-10));
+      const count=2+Math.floor(Math.random()*2);
+      for(let i=0;i<count;i++) particles.push(new Particle(bucket.restX+(Math.random()-0.5)*100,-10));
     }
 
     // Stable bucket
@@ -310,10 +311,13 @@
     bucket.vx*=0.94; bucket.vy*=0.94;
     bucket.x+=bucket.vx; bucket.y+=bucket.vy;
 
-    // Particle integration
+    // Particle integration with velocity cap
     for(let i=0;i<particles.length;i++) {
       const p=particles[i];
-      p.vy+=0.5; p.vx*=0.985; p.vy*=0.985;
+      p.vy+=0.35;
+      p.vx*=0.985; p.vy*=0.985;
+      p.vx=Math.max(-10,Math.min(10,p.vx));
+      p.vy=Math.max(-10,Math.min(10,p.vy));
       p.x+=p.vx; p.y+=p.vy;
     }
 
@@ -340,7 +344,7 @@
       }
     }
 
-    // Segment collision
+    // Segment collision with wall thickness
     for(let i=0;i<particles.length;i++) {
       const p=particles[i];
       for(let j=0;j<segments.length;j++) {
@@ -348,8 +352,8 @@
         const x1=bucket.x+s.p1.x, y1=bucket.y+s.p1.y, x2=bucket.x+s.p2.x, y2=bucket.y+s.p2.y;
         const closest=closestPointOnSegment(p.x,p.y,x1,y1,x2,y2);
         const cdx=p.x-closest.x, cdy=p.y-closest.y, dist=Math.sqrt(cdx*cdx+cdy*cdy);
-        if(dist<p.r&&dist>0.001) {
-          const overlap=p.r-dist, nx=cdx/dist, ny=cdy/dist;
+        if(dist<p.r+WALL_THICKNESS&&dist>0.001) {
+          const overlap=p.r+WALL_THICKNESS-dist, nx=cdx/dist, ny=cdy/dist;
           p.x+=nx*overlap; p.y+=ny*overlap;
           const vdotn=p.vx*nx+p.vy*ny;
           p.vx-=vdotn*nx*0.92; p.vy-=vdotn*ny*0.92;
@@ -360,18 +364,17 @@
     }
 
     // Floor box collision
-    const fbTop=canvas.height-220, fbLeft=canvas.width/2-180, fbRight=canvas.width/2+180;
+    const fbTop=canvas.height-210, fbLeft=canvas.width/2-180, fbRight=canvas.width/2+180;
     for(let i=0;i<particles.length;i++) {
       const p=particles[i];
       if(p.x>fbLeft&&p.x<fbRight&&p.y+p.r>fbTop&&p.vy>0) {
         p.y=fbTop-p.r; p.vy*=-0.3; p.vx*=0.9;
-        floorJiggle-=0.8;
+        floorJiggle-=0.6;
       }
     }
-    floorJiggle*=0.3;
+    floorJiggle*=0.25;
     const jiggleY=Math.max(-2,Math.min(2,floorJiggle));
-    if(Math.abs(floorJiggle)>0.1) linkContainer.style.transform=`translate3d(0,${jiggleY}px,0)`;
-    else linkContainer.style.transform='';
+    linkContainer.style.transform=jiggleY!==0?`translate3d(0,${jiggleY}px,0)`:'';
 
     // Cull
     for(let i=particles.length-1;i>=0;i--) if(particles[i].y>canvas.height+50) particles.splice(i,1);
@@ -382,10 +385,10 @@
     ctx.save();
     ctx.translate(bucket.x,bucket.y);
     ctx.rotate(-Math.PI/2);
-    ctx.font='bold 260px "Courier New",Courier,monospace';
+    ctx.font='bold 480px "Courier New",Courier,monospace';
     ctx.textAlign='center'; ctx.textBaseline='middle';
     ctx.fillStyle='#FFFFFF';
-    ctx.shadowColor='rgba(0,0,0,0.9)'; ctx.shadowBlur=20;
+    ctx.shadowColor='rgba(0,0,0,0.95)'; ctx.shadowBlur=40;
     ctx.fillText('C',0,0);
     ctx.restore();
     ctx.shadowBlur=0;
@@ -422,7 +425,7 @@
     if(physicsMode) return;
     physicsMode=true;
 
-    // Reset link letters to readable
+    // Reset link letters
     document.querySelectorAll('a .letter').forEach(span=>{
       span.style.transform='none'; span.style.opacity='1';
     });
@@ -435,38 +438,49 @@
     if(cIdx<0) cIdx=0;
     const cLetter=h1Letters[cIdx];
 
-    // Freeze current transforms
-    h1Letters.forEach(l=>{
-      const computed=window.getComputedStyle(l.el).transform;
-      l.el.style.transform=computed==='none'?'':computed;
+    // Freeze non-C transforms, snap C to fixed position
+    h1Letters.forEach((l,i)=>{
+      if(i===cIdx) {
+        // C: snap to fixed position, clear spring offset
+        const rect=l.el.getBoundingClientRect();
+        l.el.style.position='fixed';
+        l.el.style.left=rect.left+'px';
+        l.el.style.top=rect.top+'px';
+        l.el.style.margin='0';
+        l.el.style.zIndex='100';
+        l.el.style.transform='none';
+      } else {
+        // Others: freeze current spring transform
+        const computed=window.getComputedStyle(l.el).transform;
+        l.el.style.transform=computed==='none'?'':computed;
+      }
     });
     void h1El.offsetWidth;
 
     // Set transitions
     h1Letters.forEach((l,i)=>{
       if(i===cIdx) l.el.style.transition='transform 2s ease-in-out';
-      else l.el.style.transition='transform 2s ease-in-out, opacity 2s ease-in-out';
+      else l.el.style.transition='transform 0.6s ease, opacity 0.6s ease';
     });
 
-    // Animate non-C letters: shrink to nothing
+    // Reset non-C letters to normal alignment
     h1Letters.forEach((l,i)=>{
       if(i===cIdx) return;
-      l.el.style.transform='scale(0)'; l.el.style.opacity='0';
+      l.el.style.transform='none';
+      l.el.style.opacity='1';
     });
 
-    // Animate C: grow, rotate, move to center
+    // Swap t and i to spell "Shitck"
+    if(h1Letters[11]&&h1Letters[11].el.textContent==='t') h1Letters[11].el.textContent='i';
+    if(h1Letters[12]&&h1Letters[12].el.textContent==='i') h1Letters[12].el.textContent='t';
+
+    // Animate C out: grow, rotate, move to center
     const rect=cLetter.el.getBoundingClientRect();
-    const targetX=window.innerWidth/2, targetY=window.innerHeight*0.35;
+    const targetX=window.innerWidth/2, targetY=window.innerHeight*0.38;
     const dx=targetX-(rect.left+rect.width/2), dy=targetY-(rect.top+rect.height/2);
+    cLetter.el.style.transform=`translate3d(${dx}px,${dy}px,0) rotate(-90deg) scale(9)`;
 
-    cLetter.el.style.position='fixed';
-    cLetter.el.style.left=rect.left+'px';
-    cLetter.el.style.top=rect.top+'px';
-    cLetter.el.style.margin='0';
-    cLetter.el.style.zIndex='100';
-    cLetter.el.style.transform=`translate3d(${dx}px,${dy}px,0) rotate(-90deg) scale(5)`;
-
-    // Show canvas (transparent, behind C)
+    // Show canvas
     canvas.style.display='block';
     canvas.width=window.innerWidth; canvas.height=window.innerHeight;
 
@@ -476,9 +490,8 @@
       // Draw canvas C before hiding DOM C
       ctx.clearRect(0,0,canvas.width,canvas.height);
       drawCBucket();
-      h1El.style.display='none';
+      cLetter.el.style.display='none';
       physicsLoop();
-      // Dramatic hold, then pour
       setTimeout(()=>{ pouring=true; },1500);
     },2000);
   });
@@ -491,7 +504,7 @@
   window.addEventListener('resize',()=>{
     if(!physicsMode) return;
     canvas.width=window.innerWidth; canvas.height=window.innerHeight;
-    bucket.restX=canvas.width/2; bucket.restY=canvas.height*0.35;
+    bucket.restX=canvas.width/2; bucket.restY=canvas.height*0.38;
   });
 </script>
 
