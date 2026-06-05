@@ -110,25 +110,6 @@
     cursor: pointer;
   }
 
-  .hint {
-    position: relative;
-    z-index: 5;
-    font-family: 'Courier New', Courier, monospace;
-    font-size: 10px;
-    color: #FF1493;
-    letter-spacing: 4px;
-    text-transform: uppercase;
-    margin-bottom: 30px;
-    opacity: 0.5;
-    pointer-events: none;
-    animation: pulse 2s ease-in-out infinite;
-  }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 0.3; }
-    50% { opacity: 0.7; }
-  }
-
   .link-container {
     position: relative;
     z-index: 5;
@@ -136,6 +117,17 @@
     padding: 30px 50px;
     border: 1px solid rgba(255,255,255,0.05);
     box-shadow: 0 20px 60px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.05);
+    transition: all 0.5s ease;
+  }
+
+  .link-container.physics-mode {
+    position: fixed;
+    left: 50%;
+    bottom: 40px;
+    margin-left: -180px;
+    z-index: 60;
+    width: 360px;
+    padding: 20px 0;
   }
 
   a {
@@ -169,7 +161,7 @@
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: 100;
+    z-index: 50;
     display: none;
     cursor: crosshair;
   }
@@ -185,9 +177,8 @@
 <div class="live-indicator">LIVE</div>
 
 <h1>Fool of Schtick</h1>
-<div class="hint">Click the title to receive</div>
 
-<div class="link-container">
+<div class="link-container" id="linkContainer">
   <a href="https://x.com/foolofschtick">X.com</a>
   <a href="https://www.instagram.com/foolofschtick?igsh=MzRlODBiNWFlZA==">Instagram</a>
   <a href="https://www.tiktok.com/@foolofschtick?_r=1&_t=ZT-96t2iCgbA7y">TikTok</a>
@@ -281,8 +272,7 @@
 
   // --- PHYSICS MODE: THE SHITSTORM ---
   const h1El = document.querySelector('h1');
-  const hintEl = document.querySelector('.hint');
-  const linkContainer = document.querySelector('.link-container');
+  const linkContainer = document.getElementById('linkContainer');
   const canvas = document.getElementById('shitstorm');
   const ctx = canvas.getContext('2d');
 
@@ -299,9 +289,18 @@
   let particles = [];
   let segments = [];
   let grid = {};
+  let pouring = false;
+  let phase = 'idle'; // idle, transition, hold, pouring
+  
   const bucket = {
     x: 0, y: 0, restX: 0, restY: 0,
     angle: 0, vangle: 0, vx: 0, vy: 0
+  };
+  
+  const floorBox = {
+    x: 0, y: 0, restX: 0, restY: 0,
+    w: 360, h: 200,
+    vx: 0, vy: 0
   };
 
   function Particle(x, y) {
@@ -311,7 +310,6 @@
     this.vy = Math.random() * 2 + 1;
     this.r = 2.5 + Math.random() * 3.5;
     this.color = BROWNS[Math.floor(Math.random() * BROWNS.length)];
-    this.mass = this.r;
   }
 
   function clearGrid() {
@@ -352,6 +350,11 @@
     bucket.vx = 0;
     bucket.vy = 0;
 
+    floorBox.restX = canvas.width / 2;
+    floorBox.restY = canvas.height - 100;
+    floorBox.x = floorBox.restX;
+    floorBox.y = floorBox.restY;
+
     segments = [];
     for (let i = 0; i < 13; i++) {
       const p1 = BUCKET_POINTS[i];
@@ -370,23 +373,24 @@
   }
 
   function updatePhysics() {
-    // Spawn endless shit
-    const spawnCount = 3 + Math.floor(Math.random() * 3);
-    for (let i = 0; i < spawnCount; i++) {
-      const sx = bucket.restX + (Math.random() - 0.5) * 280;
-      particles.push(new Particle(sx, -15));
+    // Spawn endless shit only when pouring
+    if (pouring) {
+      const spawnCount = 3 + Math.floor(Math.random() * 3);
+      for (let i = 0; i < spawnCount; i++) {
+        const sx = bucket.restX + (Math.random() - 0.5) * 260;
+        particles.push(new Particle(sx, -15));
+      }
     }
 
-    // Bucket spring physics
+    // Bucket physics — STABLE, no rotation
     bucket.vx += (bucket.restX - bucket.x) * 0.008;
     bucket.vy += (bucket.restY - bucket.y) * 0.008;
-    bucket.vangle += (0 - bucket.angle) * 0.006;
-    bucket.vx *= 0.92;
-    bucket.vy *= 0.92;
-    bucket.vangle *= 0.92;
+    bucket.vx *= 0.94;
+    bucket.vy *= 0.94;
     bucket.x += bucket.vx;
     bucket.y += bucket.vy;
-    bucket.angle += bucket.vangle;
+    bucket.angle = 0; // LOCKED, no spinning
+    bucket.vangle = 0;
 
     const cosA = Math.cos(bucket.angle);
     const sinA = Math.sin(bucket.angle);
@@ -488,14 +492,45 @@
           p.vx -= vdott * tx * 0.45;
           p.vy -= vdott * ty * 0.45;
           
+          // Transfer to bucket (translation only, no torque)
           bucket.vx += nx * overlap * 0.025;
           bucket.vy += ny * overlap * 0.025;
-          const rx = closest.x - bucket.x;
-          const ry = closest.y - bucket.y;
-          bucket.vangle += (rx * ny - ry * nx) * overlap * 0.0002;
         }
       }
     }
+
+    // Floor box collision
+    const fbLeft = floorBox.x - floorBox.w / 2;
+    const fbRight = floorBox.x + floorBox.w / 2;
+    const fbTop = floorBox.y - floorBox.h / 2;
+
+    for (let i = 0; i < particles.length; i++) {
+      const p = particles[i];
+      if (p.x > fbLeft - 10 && p.x < fbRight + 10 && p.y + p.r > fbTop && p.y - p.r < fbTop + 30) {
+        const overlap = (p.y + p.r) - fbTop;
+        if (overlap > 0) {
+          p.y -= overlap;
+          p.vy *= -0.4;
+          p.vx *= 0.85;
+          
+          floorBox.vy -= overlap * 0.08;
+          floorBox.vx += (p.x - floorBox.x) * overlap * 0.0005;
+        }
+      }
+    }
+
+    // Floor box spring
+    floorBox.vx += (floorBox.restX - floorBox.x) * 0.015;
+    floorBox.vy += (floorBox.restY - floorBox.y) * 0.015;
+    floorBox.vx *= 0.88;
+    floorBox.vy *= 0.88;
+    floorBox.x += floorBox.vx;
+    floorBox.y += floorBox.vy;
+
+    // Apply floor box jiggle to DOM
+    const fbx = floorBox.x - floorBox.restX;
+    const fby = floorBox.y - floorBox.restY;
+    linkContainer.style.transform = `translate3d(${fbx}px, ${fby}px, 0)`;
 
     // Cull fallen particles
     for (let i = particles.length - 1; i >= 0; i--) {
@@ -504,7 +539,7 @@
       }
     }
     
-    // Hard cap to prevent actual browser death (soft cap, user can push it)
+    // Hard cap
     if (particles.length > 18000) {
       particles.splice(0, particles.length - 18000);
     }
@@ -512,10 +547,6 @@
 
   function renderPhysics() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    // Faucet glow
-    ctx.fillStyle = 'rgba(255,20,147,0.08)';
-    ctx.fillRect(bucket.restX - 140, 0, 280, 4);
     
     // Draw particles (shit)
     for (let i = 0; i < particles.length; i++) {
@@ -546,15 +577,16 @@
     ctx.shadowBlur = 0;
     
     // Atmospheric text
-    ctx.fillStyle = 'rgba(255,20,147,0.25)';
-    ctx.font = '10px Arial, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('THE VOID CONSUMES ALL', canvas.width / 2, canvas.height - 40);
-    
-    // Particle count for the connoisseur
-    ctx.fillStyle = 'rgba(255,255,255,0.15)';
-    ctx.font = '9px Arial, sans-serif';
-    ctx.fillText(particles.length + ' PARTICLES IN THE ABYSS', canvas.width / 2, canvas.height - 25);
+    if (pouring) {
+      ctx.fillStyle = 'rgba(255,20,147,0.25)';
+      ctx.font = '10px Arial, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('THE VOID CONSUMES ALL', canvas.width / 2, canvas.height - 40);
+      
+      ctx.fillStyle = 'rgba(255,255,255,0.15)';
+      ctx.font = '9px Arial, sans-serif';
+      ctx.fillText(particles.length + ' PARTICLES IN THE ABYSS', canvas.width / 2, canvas.height - 25);
+    }
   }
 
   let physicsRafId;
@@ -565,15 +597,134 @@
     physicsRafId = requestAnimationFrame(physicsLoop);
   }
 
+  // --- TRANSITION: C MAGNIFIES AND ROTATES TO U ---
+  function runTransition() {
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height * 0.32;
+    const startTime = performance.now();
+    const TRANSITION_DUR = 2000;
+    const HOLD_DUR = 1500;
+    
+    phase = 'transition';
+    
+    function transitionFrame(now) {
+      const elapsed = now - startTime;
+      const t = Math.min(1, elapsed / TRANSITION_DUR);
+      const smooth = t * t * (3 - 2 * t);
+      
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Draw magnified C rotating toward U
+      ctx.save();
+      ctx.translate(centerX, centerY);
+      ctx.rotate(smooth * -Math.PI / 2);
+      const scale = 1 + smooth * 4;
+      ctx.scale(scale, scale);
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = 'bold 24px "Courier New", monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.shadowColor = 'rgba(255,20,147,0.4)';
+      ctx.shadowBlur = 30;
+      ctx.fillText('C', 0, 0);
+      ctx.restore();
+      
+      // Haldol pink glow intensifies
+      ctx.fillStyle = `rgba(255,20,147,${0.1 + smooth * 0.2})`;
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, 50 + smooth * 100, 0, Math.PI * 2);
+      ctx.fill();
+      
+      if (t < 1) {
+        requestAnimationFrame(transitionFrame);
+      } else {
+        // Hold for dramatic effect
+        phase = 'hold';
+        setTimeout(() => {
+          phase = 'pouring';
+          pouring = true;
+        }, HOLD_DUR);
+        
+        // Fade C, reveal bucket
+        const fadeStart = performance.now();
+        function fadeFrame(now2) {
+          const fadeElapsed = now2 - fadeStart;
+          const fadeT = Math.min(1, fadeElapsed / 500);
+          
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          
+          // Fading C
+          ctx.save();
+          ctx.translate(centerX, centerY);
+          ctx.rotate(-Math.PI / 2);
+          ctx.scale(5, 5);
+          ctx.globalAlpha = 1 - fadeT;
+          ctx.fillStyle = '#FFFFFF';
+          ctx.font = 'bold 24px "Courier New", monospace';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('C', 0, 0);
+          ctx.restore();
+          ctx.globalAlpha = 1;
+          
+          // Bucket fades in
+          ctx.shadowColor = 'rgba(0,0,0,0.9)';
+          ctx.shadowBlur = 12;
+          ctx.fillStyle = `rgba(255,255,255,${fadeT})`;
+          ctx.font = 'bold 20px "Courier New", Courier, monospace';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          
+          for (let i = 0; i < segments.length; i++) {
+            const s = segments[i];
+            ctx.save();
+            ctx.translate(
+              centerX + s.lmx * (0.5 + fadeT * 0.5),
+              centerY + s.lmy * (0.5 + fadeT * 0.5)
+            );
+            ctx.rotate(s.langle * fadeT);
+            ctx.fillText(s.letter, 0, 0);
+            ctx.restore();
+          }
+          ctx.shadowBlur = 0;
+          
+          if (fadeT < 1) {
+            requestAnimationFrame(fadeFrame);
+          }
+        }
+        requestAnimationFrame(fadeFrame);
+      }
+    }
+    
+    requestAnimationFrame(transitionFrame);
+  }
+
   h1El.addEventListener('click', () => {
     if (physicsMode) return;
     physicsMode = true;
+    
+    // Reset link letters from spring glitch so they're readable
+    allLetters.forEach(l => {
+      if (l.el.parentElement && l.el.parentElement.tagName === 'A') {
+        l.el.style.transform = 'none';
+      }
+    });
+    
+    // Hide h1, move links to bottom
     h1El.style.display = 'none';
-    if (hintEl) hintEl.style.display = 'none';
-    linkContainer.style.display = 'none';
+    linkContainer.classList.add('physics-mode');
+    
+    // Setup canvas
     canvas.style.display = 'block';
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    
+    // Init physics but don't pour yet
     initPhysics();
     physicsLoop();
+    
+    // Run dramatic transition
+    runTransition();
   });
 
   canvas.addEventListener('click', (e) => {
@@ -589,6 +740,8 @@
     canvas.height = window.innerHeight;
     bucket.restX = canvas.width / 2;
     bucket.restY = canvas.height * 0.32;
+    floorBox.restX = canvas.width / 2;
+    floorBox.restY = canvas.height - 100;
   });
 </script>
 
