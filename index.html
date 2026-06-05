@@ -3,25 +3,148 @@
 <head>
 <title>Fool of Schtick</title>
 <style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+  }
   body {
-    font-family: Arial, sans-serif;
+    font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif;
     text-align: center;
-    padding-top: 50px;
-    background-color: #f4f4f4;
+    background-color: #0f1f14;
+    background-image: radial-gradient(circle at 50% 45%, #1b4332 0%, #08140e 70%, #020504 100%);
+    color: #FFFFFF;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
   }
+
+  /* The Void — black sidebars/shadows consuming the edges */
+  .void-left, .void-right {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    width: 80px;
+    background: #000000;
+    z-index: 10;
+    pointer-events: none;
+    box-shadow: 0 0 60px rgba(0,0,0,0.95);
+  }
+  .void-left { left: 0; }
+  .void-right { right: 0; }
+
+  /* Media noise — the neon disorientation of a saturated culture */
+  .noise {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.04;
+    z-index: 15;
+    pointer-events: none;
+    background-image: repeating-radial-gradient(#000 0 0.0001%, #fff 0 0.0002%);
+    filter: contrast(150%);
+  }
+
+  /* The Seed Idea — source-less Haldol Pink glow behind the title */
+  .seed-glow {
+    position: absolute;
+    top: 38%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 600px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(255,20,147,0.25) 0%, rgba(255,20,147,0) 70%);
+    filter: blur(40px);
+    z-index: 1;
+    pointer-events: none;
+    animation: breathe 6s ease-in-out infinite;
+  }
+
+  @keyframes breathe {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.6; }
+    50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+  }
+
+  /* LIVE indicator — Red #FF0000 warning */
+  .live-indicator {
+    position: fixed;
+    top: 30px;
+    right: 100px;
+    z-index: 20;
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    font-weight: bold;
+    color: #FF0000;
+    letter-spacing: 2px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-transform: uppercase;
+  }
+  .live-indicator::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    background: #FF0000;
+    border-radius: 50%;
+    box-shadow: 0 0 10px #FF0000;
+    animation: blink 1.5s infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* Title — The Transcriber's Certificate */
   h1 {
-    margin-bottom: 30px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 64px;
+    font-weight: 700;
+    letter-spacing: -2px;
+    margin-bottom: 50px;
+    position: relative;
+    z-index: 5;
+    text-shadow: 0 0 20px rgba(0,0,0,0.8);
+    color: #FFFFFF;
   }
+
+  /* Link container — grounded in the void */
+  .link-container {
+    position: relative;
+    z-index: 5;
+    background: rgba(0,0,0,0.45);
+    padding: 30px 50px;
+    border: 1px solid rgba(255,255,255,0.05);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+
+  /* CTAs — Haldol Pink #FF1493, source-less and unsettling */
   a {
     display: block;
-    margin: 10px 0;
-    font-size: 18px;
+    margin: 14px 0;
+    font-size: 13px;
+    font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif;
     text-decoration: none;
-    color: #0000ee;
+    color: #FF1493;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    position: relative;
+    transition: all 0.3s ease;
+    text-shadow: 0 0 15px rgba(255,20,147,0.6), 0 0 30px rgba(255,20,147,0.3);
   }
+
   a:hover {
-    text-decoration: underline;
+    color: #ff69b4;
+    text-shadow: 0 0 25px rgba(255,20,147,0.9), 0 0 50px rgba(255,20,147,0.5);
+    letter-spacing: 5px;
   }
+
   .letter {
     display: inline-block;
     will-change: transform;
@@ -30,13 +153,22 @@
 </head>
 <body>
 
+<div class="void-left"></div>
+<div class="void-right"></div>
+<div class="noise"></div>
+<div class="seed-glow"></div>
+
+<div class="live-indicator">LIVE</div>
+
 <h1>Fool of Schtick</h1>
 
-<a href="https://x.com/foolofschtick">X.com</a>
-<a href="https://www.instagram.com/foolofschtick?igsh=MzRlODBiNWFlZA==">Instagram</a>
-<a href="https://www.tiktok.com/@foolofschtick?_r=1&_t=ZT-96t2iCgbA7y">TikTok</a>
-<a href="https://www.facebook.com/61590695035991/">Facebook</a>
-<a href="mailto:contact@foolofschtick.com">Email</a>
+<div class="link-container">
+  <a href="https://x.com/foolofschtick">X.com</a>
+  <a href="https://www.instagram.com/foolofschtick?igsh=MzRlODBiNWFlZA==">Instagram</a>
+  <a href="https://www.tiktok.com/@foolofschtick?_r=1&_t=ZT-96t2iCgbA7y">TikTok</a>
+  <a href="https://www.facebook.com/61590695035991/">Facebook</a>
+  <a href="mailto:contact@foolofschtick.com">Email</a>
+</div>
 
 <script>
   const rand = (min, max) => Math.random() * (max - min) + min;
