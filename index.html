@@ -117,17 +117,22 @@
     padding: 30px 50px;
     border: 1px solid rgba(255,255,255,0.05);
     box-shadow: 0 20px 60px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.05);
-    transition: all 0.5s ease;
+    transition: bottom 0.5s ease;
   }
 
   .link-container.physics-mode {
     position: fixed;
     left: 50%;
-    bottom: 40px;
+    bottom: 30px;
     margin-left: -180px;
     z-index: 60;
     width: 360px;
     padding: 20px 0;
+  }
+
+  .link-container.physics-mode a {
+    margin: 8px 0;
+    font-size: 11px;
   }
 
   a {
@@ -191,557 +196,302 @@
 <script>
   const rand = (min, max) => Math.random() * (max - min) + min;
 
-  // --- ORIGINAL SPRING GLITCH CODE ---
+  // --- SPRING GLITCH ---
   const targets = document.querySelectorAll('h1, a');
   const allLetters = [];
 
   targets.forEach(el => {
     const rawText = el.textContent;
     el.innerHTML = '';
-
     for (let i = 0; i < rawText.length; i++) {
       const span = document.createElement('span');
       span.className = 'letter';
       span.textContent = rawText[i] === ' ' ? '\u00A0' : rawText[i];
       el.appendChild(span);
-
-      allLetters.push({
-        el: span,
-        x: 0, y: 0, r: 0,
-        vx: 0, vy: 0, vr: 0,
-        tx: 0, ty: 0, tr: 0
-      });
+      allLetters.push({ el: span, x: 0, y: 0, r: 0, vx: 0, vy: 0, vr: 0, tx: 0, ty: 0, tr: 0 });
     }
   });
 
   let isGlitching = false;
-
   function unleashChaos() {
     if (isGlitching) return;
     isGlitching = true;
-
-    allLetters.forEach(l => {
-      l.tx = rand(-50, 50);
-      l.ty = rand(-35, 35);
-      l.tr = rand(-20, 20);
-    });
-
+    allLetters.forEach(l => { l.tx = rand(-50,50); l.ty = rand(-35,35); l.tr = rand(-20,20); });
     setTimeout(() => {
       allLetters.forEach(l => { l.tx = 0; l.ty = 0; l.tr = 0; });
-      setTimeout(() => {
-        isGlitching = false;
-        scheduleGlitch();
-      }, 1500);
+      setTimeout(() => { isGlitching = false; scheduleGlitch(); }, 1500);
     }, 2000);
   }
+  function scheduleGlitch() { setTimeout(unleashChaos, rand(10000,20000)); }
 
-  function scheduleGlitch() {
-    const delay = rand(10000, 20000);
-    setTimeout(unleashChaos, delay);
-  }
-
-  const TENSION = 0.06;
-  const FRICTION = 0.82;
+  const TENSION = 0.06, FRICTION = 0.82;
   let physicsMode = false;
   let springRafId;
 
   function springLoop() {
     if (physicsMode) return;
-    
     allLetters.forEach(l => {
-      const ax = (l.tx - l.x) * TENSION;
-      const ay = (l.ty - l.y) * TENSION;
-      const ar = (l.tr - l.r) * TENSION;
-
-      l.vx = (l.vx + ax) * FRICTION;
-      l.vy = (l.vy + ay) * FRICTION;
-      l.vr = (l.vr + ar) * FRICTION;
-
-      l.x += l.vx;
-      l.y += l.vy;
-      l.r += l.vr;
-
-      l.el.style.transform = `translate3d(${l.x.toFixed(2)}px, ${l.y.toFixed(2)}px, 0) rotate(${l.r.toFixed(2)}deg)`;
+      l.vx = (l.vx + (l.tx-l.x)*TENSION) * FRICTION;
+      l.vy = (l.vy + (l.ty-l.y)*TENSION) * FRICTION;
+      l.vr = (l.vr + (l.tr-l.r)*TENSION) * FRICTION;
+      l.x += l.vx; l.y += l.vy; l.r += l.vr;
+      l.el.style.transform = `translate3d(${l.x.toFixed(2)}px,${l.y.toFixed(2)}px,0) rotate(${l.r.toFixed(2)}deg)`;
     });
-    
     springRafId = requestAnimationFrame(springLoop);
   }
-
   springRafId = requestAnimationFrame(springLoop);
   scheduleGlitch();
 
-  // --- PHYSICS MODE: THE SHITSTORM ---
+  // --- PHYSICS MODE ---
   const h1El = document.querySelector('h1');
   const linkContainer = document.getElementById('linkContainer');
   const canvas = document.getElementById('shitstorm');
   const ctx = canvas.getContext('2d');
 
-  const BROWNS = ['#3d2817', '#5d3a1a', '#8b4513', '#a0522d', '#cd853f', '#d2691e', '#654321', '#4e342e'];
-  
+  const BROWNS = ['#3d2817','#5d3a1a','#8b4513','#a0522d','#cd853f','#d2691e','#654321','#4e342e'];
+
   const BUCKET_POINTS = [
-    {x:-140,y:-180}, {x:-140,y:-135}, {x:-140,y:-90}, {x:-140,y:-45},
-    {x:-140,y:0}, {x:-80,y:45}, {x:-20,y:75}, {x:20,y:75}, {x:80,y:45},
-    {x:140,y:0}, {x:140,y:-45}, {x:140,y:-90}, {x:140,y:-135}, {x:140,y:-180}
+    {x:-70,y:-80},{x:-70,y:-45},{x:-70,y:-10},{x:-70,y:25},
+    {x:-35,y:60},{x:0,y:75},{x:35,y:60},
+    {x:70,y:25},{x:70,y:-10},{x:70,y:-45},{x:70,y:-80}
   ];
-  
-  const LETTERS = 'FoolofSchtick'.split('');
-  
-  let particles = [];
-  let segments = [];
-  let grid = {};
+
+  let particles = [], segments = [], grid = {};
   let pouring = false;
-  let phase = 'idle'; // idle, transition, hold, pouring
-  
-  const bucket = {
-    x: 0, y: 0, restX: 0, restY: 0,
-    angle: 0, vangle: 0, vx: 0, vy: 0
-  };
-  
-  const floorBox = {
-    x: 0, y: 0, restX: 0, restY: 0,
-    w: 360, h: 200,
-    vx: 0, vy: 0
-  };
+  let floorJiggle = 0;
 
-  function Particle(x, y) {
-    this.x = x;
-    this.y = y;
-    this.vx = (Math.random() - 0.5) * 1.5;
-    this.vy = Math.random() * 2 + 1;
-    this.r = 2.5 + Math.random() * 3.5;
-    this.color = BROWNS[Math.floor(Math.random() * BROWNS.length)];
+  const bucket = { x:0, y:0, restX:0, restY:0, vx:0, vy:0 };
+
+  function Particle(x,y) {
+    this.x=x; this.y=y;
+    this.vx=(Math.random()-0.5)*1.5; this.vy=Math.random()*2+1;
+    this.r=2.5+Math.random()*3.5;
+    this.color=BROWNS[Math.floor(Math.random()*BROWNS.length)];
   }
 
-  function clearGrid() {
-    grid = {};
-  }
-
-  function addToGrid(p, idx) {
-    const cx = Math.floor(p.x / 10);
-    const cy = Math.floor(p.y / 10);
-    const key = cx + ',' + cy;
-    if (!grid[key]) grid[key] = [];
+  function clearGrid() { grid={}; }
+  function addToGrid(p,idx) {
+    const cx=Math.floor(p.x/10), cy=Math.floor(p.y/10);
+    const key=cx+','+cy;
+    if(!grid[key]) grid[key]=[];
     grid[key].push(idx);
   }
+  function getGrid(cx,cy) { return grid[cx+','+cy]||[]; }
 
-  function getGrid(cx, cy) {
-    return grid[cx + ',' + cy] || [];
-  }
-
-  function closestPointOnSegment(px, py, x1, y1, x2, y2) {
-    const dx = x2 - x1, dy = y2 - y1;
-    const len2 = dx * dx + dy * dy;
-    if (len2 === 0) return { x: x1, y: y1 };
-    let t = ((px - x1) * dx + (py - y1) * dy) / len2;
-    t = Math.max(0, Math.min(1, t));
-    return { x: x1 + t * dx, y: y1 + t * dy };
+  function closestPointOnSegment(px,py,x1,y1,x2,y2) {
+    const dx=x2-x1, dy=y2-y1, len2=dx*dx+dy*dy;
+    if(len2===0) return {x:x1,y:y1};
+    let t=((px-x1)*dx+(py-y1)*dy)/len2;
+    t=Math.max(0,Math.min(1,t));
+    return {x:x1+t*dx, y:y1+t*dy};
   }
 
   function initPhysics() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    
-    bucket.restX = canvas.width / 2;
-    bucket.restY = canvas.height * 0.32;
-    bucket.x = bucket.restX;
-    bucket.y = bucket.restY;
-    bucket.angle = 0;
-    bucket.vangle = 0;
-    bucket.vx = 0;
-    bucket.vy = 0;
-
-    floorBox.restX = canvas.width / 2;
-    floorBox.restY = canvas.height - 100;
-    floorBox.x = floorBox.restX;
-    floorBox.y = floorBox.restY;
-
-    segments = [];
-    for (let i = 0; i < 13; i++) {
-      const p1 = BUCKET_POINTS[i];
-      const p2 = BUCKET_POINTS[i + 1];
-      const ldx = p2.x - p1.x;
-      const ldy = p2.y - p1.y;
-      segments.push({
-        lmx: (p1.x + p2.x) / 2,
-        lmy: (p1.y + p2.y) / 2,
-        langle: Math.atan2(ldy, ldx),
-        p1: p1,
-        p2: p2,
-        letter: LETTERS[i]
-      });
+    canvas.width=window.innerWidth; canvas.height=window.innerHeight;
+    bucket.restX=canvas.width/2; bucket.restY=canvas.height*0.35;
+    bucket.x=bucket.restX; bucket.y=bucket.restY;
+    bucket.vx=0; bucket.vy=0;
+    segments=[];
+    for(let i=0;i<10;i++) {
+      const p1=BUCKET_POINTS[i], p2=BUCKET_POINTS[i+1];
+      segments.push({p1:p1,p2:p2,mx:(p1.x+p2.x)/2,my:(p1.y+p2.y)/2});
     }
   }
 
   function updatePhysics() {
-    // Spawn endless shit only when pouring
-    if (pouring) {
-      const spawnCount = 3 + Math.floor(Math.random() * 3);
-      for (let i = 0; i < spawnCount; i++) {
-        const sx = bucket.restX + (Math.random() - 0.5) * 260;
-        particles.push(new Particle(sx, -15));
-      }
+    if(pouring) {
+      const count=3+Math.floor(Math.random()*3);
+      for(let i=0;i<count;i++) particles.push(new Particle(bucket.restX+(Math.random()-0.5)*140,-10));
     }
 
-    // Bucket physics — STABLE, no rotation
-    bucket.vx += (bucket.restX - bucket.x) * 0.008;
-    bucket.vy += (bucket.restY - bucket.y) * 0.008;
-    bucket.vx *= 0.94;
-    bucket.vy *= 0.94;
-    bucket.x += bucket.vx;
-    bucket.y += bucket.vy;
-    bucket.angle = 0; // LOCKED, no spinning
-    bucket.vangle = 0;
+    // Stable bucket
+    bucket.vx+=(bucket.restX-bucket.x)*0.008;
+    bucket.vy+=(bucket.restY-bucket.y)*0.008;
+    bucket.vx*=0.94; bucket.vy*=0.94;
+    bucket.x+=bucket.vx; bucket.y+=bucket.vy;
 
-    const cosA = Math.cos(bucket.angle);
-    const sinA = Math.sin(bucket.angle);
-
-    // Precompute world-space segment endpoints
-    for (let i = 0; i < segments.length; i++) {
-      const s = segments[i];
-      s.wx = bucket.x + s.lmx * cosA - s.lmy * sinA;
-      s.wy = bucket.y + s.lmx * sinA + s.lmy * cosA;
-      s.wangle = bucket.angle + s.langle;
-      
-      s.wp1x = bucket.x + s.p1.x * cosA - s.p1.y * sinA;
-      s.wp1y = bucket.y + s.p1.x * sinA + s.p1.y * cosA;
-      s.wp2x = bucket.x + s.p2.x * cosA - s.p2.y * sinA;
-      s.wp2y = bucket.y + s.p2.x * sinA + s.p2.y * cosA;
+    // Particle integration
+    for(let i=0;i<particles.length;i++) {
+      const p=particles[i];
+      p.vy+=0.5; p.vx*=0.985; p.vy*=0.985;
+      p.x+=p.vx; p.y+=p.vy;
     }
 
-    // Particle integration + gravity
-    for (let i = 0; i < particles.length; i++) {
-      const p = particles[i];
-      p.vy += 0.45;
-      p.vx *= 0.985;
-      p.vy *= 0.985;
-      p.x += p.vx;
-      p.y += p.vy;
-    }
-
-    // Particle-particle collision (grid-based)
+    // PP collision
     clearGrid();
-    for (let i = 0; i < particles.length; i++) addToGrid(particles[i], i);
-
-    for (let i = 0; i < particles.length; i++) {
-      const p1 = particles[i];
-      const cx = Math.floor(p1.x / 10);
-      const cy = Math.floor(p1.y / 10);
-      
-      for (let dy = -1; dy <= 1; dy++) {
-        for (let dx = -1; dx <= 1; dx++) {
-          const cell = getGrid(cx + dx, cy + dy);
-          for (let j = 0; j < cell.length; j++) {
-            const k = cell[j];
-            if (k <= i) continue;
-            const p2 = particles[k];
-            
-            const dx_ = p2.x - p1.x;
-            const dy_ = p2.y - p1.y;
-            const dist = Math.sqrt(dx_ * dx_ + dy_ * dy_);
-            const minDist = p1.r + p2.r;
-            
-            if (dist < minDist && dist > 0.001) {
-              const overlap = minDist - dist;
-              const nx = dx_ / dist;
-              const ny = dy_ / dist;
-              
-              p1.x -= nx * overlap * 0.5;
-              p1.y -= ny * overlap * 0.5;
-              p2.x += nx * overlap * 0.5;
-              p2.y += ny * overlap * 0.5;
-              
-              const avgVx = (p1.vx + p2.vx) * 0.5;
-              const avgVy = (p1.vy + p2.vy) * 0.5;
-              p1.vx = avgVx * 0.85 + p1.vx * 0.15;
-              p1.vy = avgVy * 0.85 + p1.vy * 0.15;
-              p2.vx = avgVx * 0.85 + p2.vx * 0.15;
-              p2.vy = avgVy * 0.85 + p2.vy * 0.15;
-            }
+    for(let i=0;i<particles.length;i++) addToGrid(particles[i],i);
+    for(let i=0;i<particles.length;i++) {
+      const p1=particles[i], cx=Math.floor(p1.x/10), cy=Math.floor(p1.y/10);
+      for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++) {
+        const cell=getGrid(cx+dx,cy+dy);
+        for(let j=0;j<cell.length;j++) {
+          const k=cell[j]; if(k<=i) continue;
+          const p2=particles[k], dx_=p2.x-p1.x, dy_=p2.y-p1.y, dist=Math.sqrt(dx_*dx_+dy_*dy_);
+          const minDist=p1.r+p2.r;
+          if(dist<minDist&&dist>0.001) {
+            const overlap=minDist-dist, nx=dx_/dist, ny=dy_/dist;
+            p1.x-=nx*overlap*0.5; p1.y-=ny*overlap*0.5;
+            p2.x+=nx*overlap*0.5; p2.y+=ny*overlap*0.5;
+            const avgVx=(p1.vx+p2.vx)*0.5, avgVy=(p1.vy+p2.vy)*0.5;
+            p1.vx=avgVx*0.85+p1.vx*0.15; p1.vy=avgVy*0.85+p1.vy*0.15;
+            p2.vx=avgVx*0.85+p2.vx*0.15; p2.vy=avgVy*0.85+p2.vy*0.15;
           }
         }
       }
     }
 
-    // Particle-segment collision
-    for (let i = 0; i < particles.length; i++) {
-      const p = particles[i];
-      
-      for (let j = 0; j < segments.length; j++) {
-        const s = segments[j];
-        const closest = closestPointOnSegment(p.x, p.y, s.wp1x, s.wp1y, s.wp2x, s.wp2y);
-        
-        const cdx = p.x - closest.x;
-        const cdy = p.y - closest.y;
-        const dist = Math.sqrt(cdx * cdx + cdy * cdy);
-        
-        if (dist < p.r && dist > 0.001) {
-          const overlap = p.r - dist;
-          const nx = cdx / dist;
-          const ny = cdy / dist;
-          
-          p.x += nx * overlap;
-          p.y += ny * overlap;
-          
-          const vdotn = p.vx * nx + p.vy * ny;
-          p.vx -= vdotn * nx * 0.92;
-          p.vy -= vdotn * ny * 0.92;
-          
-          const tx = -ny;
-          const ty = nx;
-          const vdott = p.vx * tx + p.vy * ty;
-          p.vx -= vdott * tx * 0.45;
-          p.vy -= vdott * ty * 0.45;
-          
-          // Transfer to bucket (translation only, no torque)
-          bucket.vx += nx * overlap * 0.025;
-          bucket.vy += ny * overlap * 0.025;
+    // Segment collision
+    for(let i=0;i<particles.length;i++) {
+      const p=particles[i];
+      for(let j=0;j<segments.length;j++) {
+        const s=segments[j];
+        const x1=bucket.x+s.p1.x, y1=bucket.y+s.p1.y, x2=bucket.x+s.p2.x, y2=bucket.y+s.p2.y;
+        const closest=closestPointOnSegment(p.x,p.y,x1,y1,x2,y2);
+        const cdx=p.x-closest.x, cdy=p.y-closest.y, dist=Math.sqrt(cdx*cdx+cdy*cdy);
+        if(dist<p.r&&dist>0.001) {
+          const overlap=p.r-dist, nx=cdx/dist, ny=cdy/dist;
+          p.x+=nx*overlap; p.y+=ny*overlap;
+          const vdotn=p.vx*nx+p.vy*ny;
+          p.vx-=vdotn*nx*0.92; p.vy-=vdotn*ny*0.92;
+          const tx=-ny, ty=nx, vdott=p.vx*tx+p.vy*ty;
+          p.vx-=vdott*tx*0.45; p.vy-=vdott*ty*0.45;
         }
       }
     }
 
     // Floor box collision
-    const fbLeft = floorBox.x - floorBox.w / 2;
-    const fbRight = floorBox.x + floorBox.w / 2;
-    const fbTop = floorBox.y - floorBox.h / 2;
-
-    for (let i = 0; i < particles.length; i++) {
-      const p = particles[i];
-      if (p.x > fbLeft - 10 && p.x < fbRight + 10 && p.y + p.r > fbTop && p.y - p.r < fbTop + 30) {
-        const overlap = (p.y + p.r) - fbTop;
-        if (overlap > 0) {
-          p.y -= overlap;
-          p.vy *= -0.4;
-          p.vx *= 0.85;
-          
-          floorBox.vy -= overlap * 0.08;
-          floorBox.vx += (p.x - floorBox.x) * overlap * 0.0005;
-        }
+    const fbTop=canvas.height-220, fbLeft=canvas.width/2-180, fbRight=canvas.width/2+180;
+    for(let i=0;i<particles.length;i++) {
+      const p=particles[i];
+      if(p.x>fbLeft&&p.x<fbRight&&p.y+p.r>fbTop&&p.vy>0) {
+        p.y=fbTop-p.r; p.vy*=-0.3; p.vx*=0.9;
+        floorJiggle-=0.8;
       }
     }
+    floorJiggle*=0.3;
+    const jiggleY=Math.max(-2,Math.min(2,floorJiggle));
+    if(Math.abs(floorJiggle)>0.1) linkContainer.style.transform=`translate3d(0,${jiggleY}px,0)`;
+    else linkContainer.style.transform='';
 
-    // Floor box spring
-    floorBox.vx += (floorBox.restX - floorBox.x) * 0.015;
-    floorBox.vy += (floorBox.restY - floorBox.y) * 0.015;
-    floorBox.vx *= 0.88;
-    floorBox.vy *= 0.88;
-    floorBox.x += floorBox.vx;
-    floorBox.y += floorBox.vy;
+    // Cull
+    for(let i=particles.length-1;i>=0;i--) if(particles[i].y>canvas.height+50) particles.splice(i,1);
+    if(particles.length>15000) particles.splice(0,particles.length-15000);
+  }
 
-    // Apply floor box jiggle to DOM
-    const fbx = floorBox.x - floorBox.restX;
-    const fby = floorBox.y - floorBox.restY;
-    linkContainer.style.transform = `translate3d(${fbx}px, ${fby}px, 0)`;
-
-    // Cull fallen particles
-    for (let i = particles.length - 1; i >= 0; i--) {
-      if (particles[i].y > canvas.height + 100) {
-        particles.splice(i, 1);
-      }
-    }
-    
-    // Hard cap
-    if (particles.length > 18000) {
-      particles.splice(0, particles.length - 18000);
-    }
+  function drawCBucket() {
+    ctx.save();
+    ctx.translate(bucket.x,bucket.y);
+    ctx.rotate(-Math.PI/2);
+    ctx.font='bold 260px "Courier New",Courier,monospace';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillStyle='#FFFFFF';
+    ctx.shadowColor='rgba(0,0,0,0.9)'; ctx.shadowBlur=20;
+    ctx.fillText('C',0,0);
+    ctx.restore();
+    ctx.shadowBlur=0;
   }
 
   function renderPhysics() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    // Draw particles (shit)
-    for (let i = 0; i < particles.length; i++) {
-      const p = particles[i];
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      ctx.fillStyle = p.color;
-      ctx.fill();
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    drawCBucket();
+    for(let i=0;i<particles.length;i++) {
+      const p=particles[i];
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle=p.color; ctx.fill();
     }
-    
-    // Draw bucket letters
-    ctx.shadowColor = 'rgba(0,0,0,0.9)';
-    ctx.shadowBlur = 12;
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = 'bold 20px "Courier New", Courier, monospace';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    
-    for (let i = 0; i < segments.length; i++) {
-      const s = segments[i];
-      ctx.save();
-      ctx.translate(s.wx, s.wy);
-      ctx.rotate(s.wangle);
-      ctx.fillText(s.letter, 0, 0);
-      ctx.restore();
-    }
-    
-    ctx.shadowBlur = 0;
-    
-    // Atmospheric text
-    if (pouring) {
-      ctx.fillStyle = 'rgba(255,20,147,0.25)';
-      ctx.font = '10px Arial, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('THE VOID CONSUMES ALL', canvas.width / 2, canvas.height - 40);
-      
-      ctx.fillStyle = 'rgba(255,255,255,0.15)';
-      ctx.font = '9px Arial, sans-serif';
-      ctx.fillText(particles.length + ' PARTICLES IN THE ABYSS', canvas.width / 2, canvas.height - 25);
+    if(pouring) {
+      ctx.fillStyle='rgba(255,20,147,0.2)';
+      ctx.font='10px Arial,sans-serif'; ctx.textAlign='center';
+      ctx.fillText('THE VOID CONSUMES ALL',canvas.width/2,canvas.height-40);
+      ctx.fillStyle='rgba(255,255,255,0.15)';
+      ctx.font='9px Arial,sans-serif';
+      ctx.fillText(particles.length+' PARTICLES',canvas.width/2,canvas.height-25);
     }
   }
 
   let physicsRafId;
   function physicsLoop() {
-    if (!physicsMode) return;
+    if(!physicsMode) return;
     updatePhysics();
     renderPhysics();
-    physicsRafId = requestAnimationFrame(physicsLoop);
+    physicsRafId=requestAnimationFrame(physicsLoop);
   }
 
-  // --- TRANSITION: C MAGNIFIES AND ROTATES TO U ---
-  function runTransition() {
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height * 0.32;
-    const startTime = performance.now();
-    const TRANSITION_DUR = 2000;
-    const HOLD_DUR = 1500;
-    
-    phase = 'transition';
-    
-    function transitionFrame(now) {
-      const elapsed = now - startTime;
-      const t = Math.min(1, elapsed / TRANSITION_DUR);
-      const smooth = t * t * (3 - 2 * t);
-      
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
-      // Draw magnified C rotating toward U
-      ctx.save();
-      ctx.translate(centerX, centerY);
-      ctx.rotate(smooth * -Math.PI / 2);
-      const scale = 1 + smooth * 4;
-      ctx.scale(scale, scale);
-      ctx.fillStyle = '#FFFFFF';
-      ctx.font = 'bold 24px "Courier New", monospace';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.shadowColor = 'rgba(255,20,147,0.4)';
-      ctx.shadowBlur = 30;
-      ctx.fillText('C', 0, 0);
-      ctx.restore();
-      
-      // Haldol pink glow intensifies
-      ctx.fillStyle = `rgba(255,20,147,${0.1 + smooth * 0.2})`;
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, 50 + smooth * 100, 0, Math.PI * 2);
-      ctx.fill();
-      
-      if (t < 1) {
-        requestAnimationFrame(transitionFrame);
-      } else {
-        // Hold for dramatic effect
-        phase = 'hold';
-        setTimeout(() => {
-          phase = 'pouring';
-          pouring = true;
-        }, HOLD_DUR);
-        
-        // Fade C, reveal bucket
-        const fadeStart = performance.now();
-        function fadeFrame(now2) {
-          const fadeElapsed = now2 - fadeStart;
-          const fadeT = Math.min(1, fadeElapsed / 500);
-          
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-          
-          // Fading C
-          ctx.save();
-          ctx.translate(centerX, centerY);
-          ctx.rotate(-Math.PI / 2);
-          ctx.scale(5, 5);
-          ctx.globalAlpha = 1 - fadeT;
-          ctx.fillStyle = '#FFFFFF';
-          ctx.font = 'bold 24px "Courier New", monospace';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText('C', 0, 0);
-          ctx.restore();
-          ctx.globalAlpha = 1;
-          
-          // Bucket fades in
-          ctx.shadowColor = 'rgba(0,0,0,0.9)';
-          ctx.shadowBlur = 12;
-          ctx.fillStyle = `rgba(255,255,255,${fadeT})`;
-          ctx.font = 'bold 20px "Courier New", Courier, monospace';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          
-          for (let i = 0; i < segments.length; i++) {
-            const s = segments[i];
-            ctx.save();
-            ctx.translate(
-              centerX + s.lmx * (0.5 + fadeT * 0.5),
-              centerY + s.lmy * (0.5 + fadeT * 0.5)
-            );
-            ctx.rotate(s.langle * fadeT);
-            ctx.fillText(s.letter, 0, 0);
-            ctx.restore();
-          }
-          ctx.shadowBlur = 0;
-          
-          if (fadeT < 1) {
-            requestAnimationFrame(fadeFrame);
-          }
-        }
-        requestAnimationFrame(fadeFrame);
-      }
-    }
-    
-    requestAnimationFrame(transitionFrame);
-  }
+  // --- CLICK HANDLER ---
+  h1El.addEventListener('click',()=>{
+    if(physicsMode) return;
+    physicsMode=true;
 
-  h1El.addEventListener('click', () => {
-    if (physicsMode) return;
-    physicsMode = true;
-    
-    // Reset link letters from spring glitch so they're readable
-    allLetters.forEach(l => {
-      if (l.el.parentElement && l.el.parentElement.tagName === 'A') {
-        l.el.style.transform = 'none';
-      }
+    // Reset link letters to readable
+    document.querySelectorAll('a .letter').forEach(span=>{
+      span.style.transform='none'; span.style.opacity='1';
     });
-    
-    // Hide h1, move links to bottom
-    h1El.style.display = 'none';
     linkContainer.classList.add('physics-mode');
-    
-    // Setup canvas
-    canvas.style.display = 'block';
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    
-    // Init physics but don't pour yet
-    initPhysics();
-    physicsLoop();
-    
-    // Run dramatic transition
-    runTransition();
+
+    // Get h1 letters, find C after S
+    const h1Letters=allLetters.filter(l=>l.el.parentElement===h1El);
+    let cIdx=h1Letters.findIndex((l,i)=>l.el.textContent==='c'&&i>0&&h1Letters[i-1].el.textContent==='S');
+    if(cIdx<0) cIdx=h1Letters.findIndex(l=>l.el.textContent==='c');
+    if(cIdx<0) cIdx=0;
+    const cLetter=h1Letters[cIdx];
+
+    // Freeze current transforms
+    h1Letters.forEach(l=>{
+      const computed=window.getComputedStyle(l.el).transform;
+      l.el.style.transform=computed==='none'?'':computed;
+    });
+    void h1El.offsetWidth;
+
+    // Set transitions
+    h1Letters.forEach((l,i)=>{
+      if(i===cIdx) l.el.style.transition='transform 2s ease-in-out';
+      else l.el.style.transition='transform 2s ease-in-out, opacity 2s ease-in-out';
+    });
+
+    // Animate non-C letters: shrink to nothing
+    h1Letters.forEach((l,i)=>{
+      if(i===cIdx) return;
+      l.el.style.transform='scale(0)'; l.el.style.opacity='0';
+    });
+
+    // Animate C: grow, rotate, move to center
+    const rect=cLetter.el.getBoundingClientRect();
+    const targetX=window.innerWidth/2, targetY=window.innerHeight*0.35;
+    const dx=targetX-(rect.left+rect.width/2), dy=targetY-(rect.top+rect.height/2);
+
+    cLetter.el.style.position='fixed';
+    cLetter.el.style.left=rect.left+'px';
+    cLetter.el.style.top=rect.top+'px';
+    cLetter.el.style.margin='0';
+    cLetter.el.style.zIndex='100';
+    cLetter.el.style.transform=`translate3d(${dx}px,${dy}px,0) rotate(-90deg) scale(5)`;
+
+    // Show canvas (transparent, behind C)
+    canvas.style.display='block';
+    canvas.width=window.innerWidth; canvas.height=window.innerHeight;
+
+    // After transition: handoff to canvas
+    setTimeout(()=>{
+      initPhysics();
+      // Draw canvas C before hiding DOM C
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      drawCBucket();
+      h1El.style.display='none';
+      physicsLoop();
+      // Dramatic hold, then pour
+      setTimeout(()=>{ pouring=true; },1500);
+    },2000);
   });
 
-  canvas.addEventListener('click', (e) => {
-    if (!physicsMode) return;
-    for (let i = 0; i < 25; i++) {
-      particles.push(new Particle(e.clientX + rand(-40, 40), e.clientY + rand(-40, 40)));
-    }
+  canvas.addEventListener('click',(e)=>{
+    if(!physicsMode) return;
+    for(let i=0;i<25;i++) particles.push(new Particle(e.clientX+rand(-40,40),e.clientY+rand(-40,40)));
   });
 
-  window.addEventListener('resize', () => {
-    if (!physicsMode) return;
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    bucket.restX = canvas.width / 2;
-    bucket.restY = canvas.height * 0.32;
-    floorBox.restX = canvas.width / 2;
-    floorBox.restY = canvas.height - 100;
+  window.addEventListener('resize',()=>{
+    if(!physicsMode) return;
+    canvas.width=window.innerWidth; canvas.height=window.innerHeight;
+    bucket.restX=canvas.width/2; bucket.restY=canvas.height*0.35;
   });
 </script>
 
