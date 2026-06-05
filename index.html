@@ -249,13 +249,14 @@
   const ctx = canvas.getContext('2d');
 
   const BROWNS = ['#3d2817','#5d3a1a','#8b4513','#a0522d','#cd853f','#d2691e','#654321','#4e342e'];
-  const WALL_THICKNESS = 25;
+  const WALL_THICKNESS = 35;
+  const RESTITUTION = 0.6;
 
-  // Tight U matching inner edge of 480px rotated C — walls curve inward at top to catch strays
+  // Wide, deep U matching inner edge of 480px rotated C — thick walls make the whole C feel solid
   const BUCKET_POINTS = [
-    {x:-85,y:-160}, {x:-88,y:-120}, {x:-90,y:-80}, {x:-92,y:-40}, {x:-94,y:0},
-    {x:-75,y:55}, {x:-40,y:95}, {x:0,y:110}, {x:40,y:95}, {x:75,y:55},
-    {x:94,y:0}, {x:92,y:-40}, {x:90,y:-80}, {x:88,y:-120}, {x:85,y:-160}
+    {x:-120,y:-200}, {x:-125,y:-150}, {x:-128,y:-100}, {x:-130,y:-50}, {x:-130,y:0},
+    {x:-110,y:70}, {x:-65,y:120}, {x:0,y:140}, {x:65,y:120}, {x:110,y:70},
+    {x:130,y:0}, {x:130,y:-50}, {x:128,y:-100}, {x:125,y:-150}, {x:120,y:-200}
   ];
 
   let particles = [], segments = [], grid = {};
@@ -267,7 +268,7 @@
   function Particle(x,y) {
     this.x=x; this.y=y;
     this.vx=(Math.random()-0.5)*1.2; this.vy=Math.random()*1.5+1.5;
-    this.r=2.5+Math.random()*3.5;
+    this.r=3+Math.random()*4;
     this.color=BROWNS[Math.floor(Math.random()*BROWNS.length)];
   }
 
@@ -303,7 +304,7 @@
   function updatePhysics() {
     if(pouring) {
       const count=2+Math.floor(Math.random()*2);
-      for(let i=0;i<count;i++) particles.push(new Particle(bucket.restX+(Math.random()-0.5)*40,-10));
+      for(let i=0;i<count;i++) particles.push(new Particle(bucket.restX+(Math.random()-0.5)*50,-10));
     }
 
     // Stable bucket
@@ -312,10 +313,10 @@
     bucket.vx*=0.94; bucket.vy*=0.94;
     bucket.x+=bucket.vx; bucket.y+=bucket.vy;
 
-    // Particle integration with low gravity and velocity cap
+    // Particle integration
     for(let i=0;i<particles.length;i++) {
       const p=particles[i];
-      p.vy+=0.22;
+      p.vy+=0.2;
       p.vx*=0.99; p.vy*=0.99;
       p.vx=Math.max(-8,Math.min(8,p.vx));
       p.vy=Math.max(-8,Math.min(8,p.vy));
@@ -345,7 +346,7 @@
       }
     }
 
-    // Segment collision with thick walls and strong bounce
+    // Segment collision — thick walls, strong bounce
     for(let i=0;i<particles.length;i++) {
       const p=particles[i];
       for(let j=0;j<segments.length;j++) {
@@ -358,10 +359,10 @@
           p.x+=nx*overlap; p.y+=ny*overlap;
           const vdotn=p.vx*nx+p.vy*ny;
           if(vdotn<0) {
-            p.vx-=vdotn*nx*1.8; p.vy-=vdotn*ny*1.8;
+            p.vx-=vdotn*nx*(1+RESTITUTION); p.vy-=vdotn*ny*(1+RESTITUTION);
           }
           const tx=-ny, ty=nx, vdott=p.vx*tx+p.vy*ty;
-          p.vx-=vdott*tx*0.6; p.vy-=vdott*ty*0.6;
+          p.vx-=vdott*tx*0.5; p.vy-=vdott*ty*0.5;
         }
       }
     }
@@ -375,8 +376,8 @@
         floorJiggle-=0.6;
       }
     }
-    floorJiggle*=0.25;
-    const jiggleY=Math.max(-2,Math.min(2,floorJiggle));
+    floorJiggle*=0.2;
+    const jiggleY=Math.max(-1.5,Math.min(1.5,floorJiggle));
     linkContainer.style.transform=jiggleY!==0?`translate3d(0,${jiggleY}px,0)`:'';
 
     // Cull
@@ -481,15 +482,15 @@
     const dx=targetX-(rect.left+rect.width/2), dy=targetY-(rect.top+rect.height/2);
     cLetter.el.style.transform=`translate3d(${dx}px,${dy}px,0) rotate(-90deg) scale(9)`;
 
-    // Fade out "Fool of Shitck" starting at 1s
+    // Fade out "Fool of Shitck" starting at 0.5s
     setTimeout(()=>{
       h1Letters.forEach((l,i)=>{
         if(i===cIdx) return;
-        l.el.style.transition='transform 2s ease-in-out, opacity 2s ease-in-out';
+        l.el.style.transition='transform 1.5s ease-in-out, opacity 1.5s ease-in-out';
         l.el.style.transform='scale(0)';
         l.el.style.opacity='0';
       });
-    },1000);
+    },500);
 
     // Show canvas
     canvas.style.display='block';
