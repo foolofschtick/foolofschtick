@@ -67,7 +67,6 @@
     50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
   }
 
-
   .live-indicator {
     position: fixed;
     top: 30px;
@@ -103,13 +102,32 @@
     font-size: 64px;
     font-weight: 700;
     letter-spacing: -2px;
-    margin-bottom: 50px;
+    margin-bottom: 10px;
     position: relative;
     z-index: 5;
     text-shadow: 0 0 20px rgba(0,0,0,0.8);
     color: #FFFFFF;
+    cursor: pointer;
   }
 
+  .hint {
+    position: relative;
+    z-index: 5;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 10px;
+    color: #FF1493;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 30px;
+    opacity: 0.5;
+    pointer-events: none;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 0.7; }
+  }
 
   .link-container {
     position: relative;
@@ -144,6 +162,17 @@
     display: inline-block;
     will-change: transform;
   }
+
+  #shitstorm {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 100;
+    display: none;
+    cursor: crosshair;
+  }
 </style>
 </head>
 <body>
@@ -156,6 +185,7 @@
 <div class="live-indicator">LIVE</div>
 
 <h1>Fool of Schtick</h1>
+<div class="hint">Click the title to receive</div>
 
 <div class="link-container">
   <a href="https://x.com/foolofschtick">X.com</a>
@@ -165,10 +195,12 @@
   <a href="mailto:contact@foolofschtick.com">Email</a>
 </div>
 
+<canvas id="shitstorm"></canvas>
+
 <script>
   const rand = (min, max) => Math.random() * (max - min) + min;
 
-  // Grab every element we want to ruin
+  // --- ORIGINAL SPRING GLITCH CODE ---
   const targets = document.querySelectorAll('h1, a');
   const allLetters = [];
 
@@ -219,8 +251,12 @@
 
   const TENSION = 0.06;
   const FRICTION = 0.82;
+  let physicsMode = false;
+  let springRafId;
 
   function springLoop() {
+    if (physicsMode) return;
+    
     allLetters.forEach(l => {
       const ax = (l.tx - l.x) * TENSION;
       const ay = (l.ty - l.y) * TENSION;
@@ -236,11 +272,324 @@
 
       l.el.style.transform = `translate3d(${l.x.toFixed(2)}px, ${l.y.toFixed(2)}px, 0) rotate(${l.r.toFixed(2)}deg)`;
     });
-    requestAnimationFrame(springLoop);
+    
+    springRafId = requestAnimationFrame(springLoop);
   }
 
-  springLoop();
+  springRafId = requestAnimationFrame(springLoop);
   scheduleGlitch();
+
+  // --- PHYSICS MODE: THE SHITSTORM ---
+  const h1El = document.querySelector('h1');
+  const hintEl = document.querySelector('.hint');
+  const linkContainer = document.querySelector('.link-container');
+  const canvas = document.getElementById('shitstorm');
+  const ctx = canvas.getContext('2d');
+
+  const BROWNS = ['#3d2817', '#5d3a1a', '#8b4513', '#a0522d', '#cd853f', '#d2691e', '#654321', '#4e342e'];
+  
+  const BUCKET_POINTS = [
+    {x:-140,y:-180}, {x:-140,y:-135}, {x:-140,y:-90}, {x:-140,y:-45},
+    {x:-140,y:0}, {x:-80,y:45}, {x:-20,y:75}, {x:20,y:75}, {x:80,y:45},
+    {x:140,y:0}, {x:140,y:-45}, {x:140,y:-90}, {x:140,y:-135}, {x:140,y:-180}
+  ];
+  
+  const LETTERS = 'FoolofSchtick'.split('');
+  
+  let particles = [];
+  let segments = [];
+  let grid = {};
+  const bucket = {
+    x: 0, y: 0, restX: 0, restY: 0,
+    angle: 0, vangle: 0, vx: 0, vy: 0
+  };
+
+  function Particle(x, y) {
+    this.x = x;
+    this.y = y;
+    this.vx = (Math.random() - 0.5) * 1.5;
+    this.vy = Math.random() * 2 + 1;
+    this.r = 2.5 + Math.random() * 3.5;
+    this.color = BROWNS[Math.floor(Math.random() * BROWNS.length)];
+    this.mass = this.r;
+  }
+
+  function clearGrid() {
+    grid = {};
+  }
+
+  function addToGrid(p, idx) {
+    const cx = Math.floor(p.x / 10);
+    const cy = Math.floor(p.y / 10);
+    const key = cx + ',' + cy;
+    if (!grid[key]) grid[key] = [];
+    grid[key].push(idx);
+  }
+
+  function getGrid(cx, cy) {
+    return grid[cx + ',' + cy] || [];
+  }
+
+  function closestPointOnSegment(px, py, x1, y1, x2, y2) {
+    const dx = x2 - x1, dy = y2 - y1;
+    const len2 = dx * dx + dy * dy;
+    if (len2 === 0) return { x: x1, y: y1 };
+    let t = ((px - x1) * dx + (py - y1) * dy) / len2;
+    t = Math.max(0, Math.min(1, t));
+    return { x: x1 + t * dx, y: y1 + t * dy };
+  }
+
+  function initPhysics() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    
+    bucket.restX = canvas.width / 2;
+    bucket.restY = canvas.height * 0.32;
+    bucket.x = bucket.restX;
+    bucket.y = bucket.restY;
+    bucket.angle = 0;
+    bucket.vangle = 0;
+    bucket.vx = 0;
+    bucket.vy = 0;
+
+    segments = [];
+    for (let i = 0; i < 13; i++) {
+      const p1 = BUCKET_POINTS[i];
+      const p2 = BUCKET_POINTS[i + 1];
+      const ldx = p2.x - p1.x;
+      const ldy = p2.y - p1.y;
+      segments.push({
+        lmx: (p1.x + p2.x) / 2,
+        lmy: (p1.y + p2.y) / 2,
+        langle: Math.atan2(ldy, ldx),
+        p1: p1,
+        p2: p2,
+        letter: LETTERS[i]
+      });
+    }
+  }
+
+  function updatePhysics() {
+    // Spawn endless shit
+    const spawnCount = 3 + Math.floor(Math.random() * 3);
+    for (let i = 0; i < spawnCount; i++) {
+      const sx = bucket.restX + (Math.random() - 0.5) * 280;
+      particles.push(new Particle(sx, -15));
+    }
+
+    // Bucket spring physics
+    bucket.vx += (bucket.restX - bucket.x) * 0.008;
+    bucket.vy += (bucket.restY - bucket.y) * 0.008;
+    bucket.vangle += (0 - bucket.angle) * 0.006;
+    bucket.vx *= 0.92;
+    bucket.vy *= 0.92;
+    bucket.vangle *= 0.92;
+    bucket.x += bucket.vx;
+    bucket.y += bucket.vy;
+    bucket.angle += bucket.vangle;
+
+    const cosA = Math.cos(bucket.angle);
+    const sinA = Math.sin(bucket.angle);
+
+    // Precompute world-space segment endpoints
+    for (let i = 0; i < segments.length; i++) {
+      const s = segments[i];
+      s.wx = bucket.x + s.lmx * cosA - s.lmy * sinA;
+      s.wy = bucket.y + s.lmx * sinA + s.lmy * cosA;
+      s.wangle = bucket.angle + s.langle;
+      
+      s.wp1x = bucket.x + s.p1.x * cosA - s.p1.y * sinA;
+      s.wp1y = bucket.y + s.p1.x * sinA + s.p1.y * cosA;
+      s.wp2x = bucket.x + s.p2.x * cosA - s.p2.y * sinA;
+      s.wp2y = bucket.y + s.p2.x * sinA + s.p2.y * cosA;
+    }
+
+    // Particle integration + gravity
+    for (let i = 0; i < particles.length; i++) {
+      const p = particles[i];
+      p.vy += 0.45;
+      p.vx *= 0.985;
+      p.vy *= 0.985;
+      p.x += p.vx;
+      p.y += p.vy;
+    }
+
+    // Particle-particle collision (grid-based)
+    clearGrid();
+    for (let i = 0; i < particles.length; i++) addToGrid(particles[i], i);
+
+    for (let i = 0; i < particles.length; i++) {
+      const p1 = particles[i];
+      const cx = Math.floor(p1.x / 10);
+      const cy = Math.floor(p1.y / 10);
+      
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          const cell = getGrid(cx + dx, cy + dy);
+          for (let j = 0; j < cell.length; j++) {
+            const k = cell[j];
+            if (k <= i) continue;
+            const p2 = particles[k];
+            
+            const dx_ = p2.x - p1.x;
+            const dy_ = p2.y - p1.y;
+            const dist = Math.sqrt(dx_ * dx_ + dy_ * dy_);
+            const minDist = p1.r + p2.r;
+            
+            if (dist < minDist && dist > 0.001) {
+              const overlap = minDist - dist;
+              const nx = dx_ / dist;
+              const ny = dy_ / dist;
+              
+              p1.x -= nx * overlap * 0.5;
+              p1.y -= ny * overlap * 0.5;
+              p2.x += nx * overlap * 0.5;
+              p2.y += ny * overlap * 0.5;
+              
+              const avgVx = (p1.vx + p2.vx) * 0.5;
+              const avgVy = (p1.vy + p2.vy) * 0.5;
+              p1.vx = avgVx * 0.85 + p1.vx * 0.15;
+              p1.vy = avgVy * 0.85 + p1.vy * 0.15;
+              p2.vx = avgVx * 0.85 + p2.vx * 0.15;
+              p2.vy = avgVy * 0.85 + p2.vy * 0.15;
+            }
+          }
+        }
+      }
+    }
+
+    // Particle-segment collision
+    for (let i = 0; i < particles.length; i++) {
+      const p = particles[i];
+      
+      for (let j = 0; j < segments.length; j++) {
+        const s = segments[j];
+        const closest = closestPointOnSegment(p.x, p.y, s.wp1x, s.wp1y, s.wp2x, s.wp2y);
+        
+        const cdx = p.x - closest.x;
+        const cdy = p.y - closest.y;
+        const dist = Math.sqrt(cdx * cdx + cdy * cdy);
+        
+        if (dist < p.r && dist > 0.001) {
+          const overlap = p.r - dist;
+          const nx = cdx / dist;
+          const ny = cdy / dist;
+          
+          p.x += nx * overlap;
+          p.y += ny * overlap;
+          
+          const vdotn = p.vx * nx + p.vy * ny;
+          p.vx -= vdotn * nx * 0.92;
+          p.vy -= vdotn * ny * 0.92;
+          
+          const tx = -ny;
+          const ty = nx;
+          const vdott = p.vx * tx + p.vy * ty;
+          p.vx -= vdott * tx * 0.45;
+          p.vy -= vdott * ty * 0.45;
+          
+          bucket.vx += nx * overlap * 0.025;
+          bucket.vy += ny * overlap * 0.025;
+          const rx = closest.x - bucket.x;
+          const ry = closest.y - bucket.y;
+          bucket.vangle += (rx * ny - ry * nx) * overlap * 0.0002;
+        }
+      }
+    }
+
+    // Cull fallen particles
+    for (let i = particles.length - 1; i >= 0; i--) {
+      if (particles[i].y > canvas.height + 100) {
+        particles.splice(i, 1);
+      }
+    }
+    
+    // Hard cap to prevent actual browser death (soft cap, user can push it)
+    if (particles.length > 18000) {
+      particles.splice(0, particles.length - 18000);
+    }
+  }
+
+  function renderPhysics() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Faucet glow
+    ctx.fillStyle = 'rgba(255,20,147,0.08)';
+    ctx.fillRect(bucket.restX - 140, 0, 280, 4);
+    
+    // Draw particles (shit)
+    for (let i = 0; i < particles.length; i++) {
+      const p = particles[i];
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = p.color;
+      ctx.fill();
+    }
+    
+    // Draw bucket letters
+    ctx.shadowColor = 'rgba(0,0,0,0.9)';
+    ctx.shadowBlur = 12;
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 20px "Courier New", Courier, monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    
+    for (let i = 0; i < segments.length; i++) {
+      const s = segments[i];
+      ctx.save();
+      ctx.translate(s.wx, s.wy);
+      ctx.rotate(s.wangle);
+      ctx.fillText(s.letter, 0, 0);
+      ctx.restore();
+    }
+    
+    ctx.shadowBlur = 0;
+    
+    // Atmospheric text
+    ctx.fillStyle = 'rgba(255,20,147,0.25)';
+    ctx.font = '10px Arial, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('THE VOID CONSUMES ALL', canvas.width / 2, canvas.height - 40);
+    
+    // Particle count for the connoisseur
+    ctx.fillStyle = 'rgba(255,255,255,0.15)';
+    ctx.font = '9px Arial, sans-serif';
+    ctx.fillText(particles.length + ' PARTICLES IN THE ABYSS', canvas.width / 2, canvas.height - 25);
+  }
+
+  let physicsRafId;
+  function physicsLoop() {
+    if (!physicsMode) return;
+    updatePhysics();
+    renderPhysics();
+    physicsRafId = requestAnimationFrame(physicsLoop);
+  }
+
+  h1El.addEventListener('click', () => {
+    if (physicsMode) return;
+    physicsMode = true;
+    h1El.style.display = 'none';
+    if (hintEl) hintEl.style.display = 'none';
+    linkContainer.style.display = 'none';
+    canvas.style.display = 'block';
+    initPhysics();
+    physicsLoop();
+  });
+
+  canvas.addEventListener('click', (e) => {
+    if (!physicsMode) return;
+    for (let i = 0; i < 25; i++) {
+      particles.push(new Particle(e.clientX + rand(-40, 40), e.clientY + rand(-40, 40)));
+    }
+  });
+
+  window.addEventListener('resize', () => {
+    if (!physicsMode) return;
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    bucket.restX = canvas.width / 2;
+    bucket.restY = canvas.height * 0.32;
+  });
 </script>
 
 </body>
