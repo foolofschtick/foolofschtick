@@ -15,13 +15,11 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    /* Dawn: warm cream opening to pale airy blue */
     background: linear-gradient(165deg, #FFF8F5 0%, #F0F6FA 60%, #D6E5F0 100%);
     overflow: hidden;
     position: relative;
   }
 
-  /* Flowing blurred orbs — atmosphere, not objects */
   .orb {
     position: absolute;
     border-radius: 50%;
@@ -32,14 +30,14 @@
 
   .orb-sun {
     width: 55vw; height: 55vw;
-    background: rgba(217, 108, 63, 0.35); /* Sunsight Orange, deep and intense */
+    background: rgba(217, 108, 63, 0.35);
     top: -15vw; left: -10vw;
     animation-duration: 20s;
   }
 
   .orb-blue {
     width: 45vw; height: 45vw;
-    background: rgba(163, 194, 216, 0.40); /* Nacireman Blue: specific lightness */
+    background: rgba(163, 194, 216, 0.40);
     bottom: -15vw; right: -10vw;
     animation-duration: 24s;
     animation-delay: -6s;
@@ -59,7 +57,6 @@
     66% { transform: translate(-15px, 25px) scale(0.96); }
   }
 
-  /* Flexible center, no brittle card */
   .content {
     position: relative;
     z-index: 1;
@@ -70,13 +67,12 @@
   }
 
   h1 {
-    font-family: 'Permanent Marker', cursive; /* automatic writing, ficial, true */
+    font-family: 'Permanent Marker', cursive;
     font-size: 6.5rem;
-    color: #12121A; /* Deep Space Black: everything included, grounding */
+    color: #12121A;
     line-height: 1;
     margin-bottom: 3.5rem;
     letter-spacing: 3px;
-    /* Escher-like: shadow lifted off the physical plane */
     text-shadow: 
       4px 4px 0px rgba(217, 108, 63, 0.20),
       8px 8px 30px rgba(163, 194, 216, 0.35);
@@ -90,21 +86,28 @@
   }
 
   a {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
     font-size: 1.5rem;
     text-decoration: none;
-    color: #12121A; /* grounded in deep space */
+    color: #12121A;
     padding: 0.75rem 2.4rem;
     border-radius: 50px;
     background: rgba(255, 255, 255, 0.4);
     backdrop-filter: blur(14px) saturate(1.1);
     -webkit-backdrop-filter: blur(14px) saturate(1.1);
-    border: 1px solid rgba(163, 194, 216, 0.45); /* Nacireman lightness */
+    border: 1px solid rgba(163, 194, 216, 0.45);
     box-shadow: 0 4px 20px rgba(18, 18, 26, 0.04);
     transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   }
 
-  /* Escher-like: each link sits on a slightly different physical plane */
+  a svg {
+    width: 1.1em;
+    height: 1.1em;
+    flex-shrink: 0;
+  }
+
   a:nth-child(1) { transform: rotate(-1.8deg); }
   a:nth-child(2) { transform: rotate(1.2deg); }
   a:nth-child(3) { transform: rotate(-0.8deg); }
@@ -112,9 +115,8 @@
   a:nth-child(5) { transform: rotate(-0.4deg); }
 
   a:hover {
-    /* Attacca → Nacirema: sharp settling into flow */
     transform: scale(1.06) rotate(0deg);
-    background: rgba(217, 108, 63, 0.12); /* Sunsight bleeds through */
+    background: rgba(217, 108, 63, 0.12);
     border-color: rgba(217, 108, 63, 0.35);
     box-shadow: 0 8px 35px rgba(217, 108, 63, 0.12);
     color: #000;
@@ -135,11 +137,26 @@
   <div class="content">
     <h1>Fool of Schtick</h1>
     <div class="links">
-      <a href="https://x.com/foolofschtick" target="_blank">X.com</a>
-      <a href="https://www.instagram.com/foolofschtick?igsh=MzRlODBiNWFlZA==" target="_blank">Instagram</a>
-      <a href="https://www.tiktok.com/@foolofschtick?_r=1&_t=ZT-96t2iCgbA7y" target="_blank">TikTok</a>
-      <a href="https://www.facebook.com/61590695035991/" target="_blank">Facebook</a>
-      <a href="mailto:contact@foolofschtick.com">Email</a>
+      <a href="https://x.com/foolofschtick" target="_blank">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+        X.com
+      </a>
+      <a href="https://www.instagram.com/foolofschtick?igsh=MzRlODBiNWFlZA==" target="_blank">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+        Instagram
+      </a>
+      <a href="https://www.tiktok.com/@foolofschtick?_r=1&_t=ZT-96t2iCgbA7y" target="_blank">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93v6.16c0 2.76-1.32 5.19-3.36 6.78A7.966 7.966 0 010 19.82c2.42 1.66 5.66 1.64 8.06-.06 1.44-1.01 2.35-2.66 2.45-4.41v-11h4.03c-.01 1.39-.04 2.77-.04 4.16z"/></svg>
+        TikTok
+      </a>
+      <a href="https://www.facebook.com/61590695035991/" target="_blank">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+        Facebook
+      </a>
+      <a href="mailto:contact@foolofschtick.com">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+        Email
+      </a>
     </div>
   </div>
 
