@@ -67,6 +67,59 @@
     width: 100%;
   }
 
+  /* --- LOGO PEDESTAL --- */
+  .logo-wrap {
+    width: auto;
+    height: auto;
+    max-width: 170px;
+    max-height: 170px;
+    padding: 1rem;
+    margin: 0 auto 2.5rem;
+    border-radius: 24px;
+    background: rgba(255, 255, 255, 0.45);
+    backdrop-filter: blur(16px) saturate(1.15);
+    -webkit-backdrop-filter: blur(16px) saturate(1.15);
+    border: 1px solid rgba(163, 194, 216, 0.5);
+    box-shadow: 
+      0 6px 25px rgba(18, 18, 26, 0.05),
+      inset 0 0 20px rgba(255, 255, 255, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    animation: drift-logo 7s ease-in-out infinite;
+  }
+
+  .logo-wrap::after {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border-radius: 30px;
+    background: linear-gradient(135deg, rgba(217, 108, 63, 0.3), rgba(163, 194, 216, 0.4));
+    filter: blur(14px);
+    z-index: -1;
+    opacity: 0.6;
+    animation: pulse-ring 5s ease-in-out infinite;
+  }
+
+  .logo-wrap img {
+    width: 100%;
+    height: auto;
+    max-height: 140px;
+    display: block;
+  }
+
+  @keyframes drift-logo {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-8px) scale(1.03); }
+  }
+
+  @keyframes pulse-ring {
+    0%, 100% { opacity: 0.5; transform: scale(1); }
+    50% { opacity: 0.85; transform: scale(1.06); }
+  }
+  /* --- END LOGO --- */
+
   h1 {
     font-family: 'Permanent Marker', cursive;
     font-size: 6.5rem;
@@ -129,6 +182,8 @@
   @media (max-width: 600px) {
     h1 { font-size: 4.5rem; margin-bottom: 2.5rem; }
     a { font-size: 1.25rem; padding: 0.6rem 2rem; }
+    .logo-wrap { max-width: 140px; max-height: 140px; padding: 0.8rem; }
+    .logo-wrap img { max-height: 110px; }
   }
 </style>
 </head>
@@ -139,6 +194,11 @@
   <div class="orb orb-haze"></div>
 
   <div class="content">
+  
+    <div class="logo-wrap">
+      <img src="https://raw.githubusercontent.com/foolofschtick/foolofschtick/main/logo.png" alt="Fool of Schtick Logo">
+    </div>
+    
     <h1>Fool of Schtick</h1>
     <div class="links">
       <a href="https://x.com/foolofschtick" target="_blank">
