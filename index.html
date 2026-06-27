@@ -4,264 +4,442 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Fool of Schtick</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Fira+Code:wght@400&family=Jost:wght@400;500;600;700&family=UnifrakturMaguntia&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Fira+Code:wght@400;700&family=Tangerine:wght@400;700&family=Jost:wght@300;700;900&family=Cormorant+Garamond:ital,wght@1,600;1,700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
   body {
     font-family: 'Jost', sans-serif;
+    background: #050208;
+    color: #f0e6ff;
     min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background-color: #030008;
-    background-image:
-      radial-gradient(ellipse at 15% 15%, rgba(138, 3, 3, 0.22) 0%, transparent 50%),
-      radial-gradient(ellipse at 85% 80%, rgba(102, 2, 60, 0.25) 0%, transparent 50%),
-      radial-gradient(ellipse at 50% 50%, rgba(10, 0, 30, 0.95) 0%, #030008 100%);
-    color: #e0d5c8;
     overflow-x: hidden;
     position: relative;
+    perspective: 1200px;
   }
 
-  .noise {
+  body::before {
+    content: "";
     position: fixed;
     inset: 0;
-    z-index: 9999;
-    opacity: 0.04;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+    z-index: 1000;
     pointer-events: none;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='nf'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23nf)'/%3E%3C/svg%3E");
-    background-size: 200px 200px;
+    opacity: 0.4;
   }
 
   .vignette {
     position: fixed;
     inset: 0;
-    z-index: 998;
+    background: radial-gradient(circle, transparent 35%, #050208 90%);
+    z-index: 5;
     pointer-events: none;
-    background: radial-gradient(circle at center, transparent 25%, rgba(3, 0, 8, 0.9) 100%);
+  }
+
+  .background {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
   }
 
   .orb {
     position: absolute;
     border-radius: 50%;
-    filter: blur(100px);
-    z-index: 0;
-    animation: drift ease-in-out infinite;
+    mix-blend-mode: screen;
     pointer-events: none;
+    animation: breathe ease-in-out infinite;
   }
 
   .orb-crimson {
-    width: 60vw; height: 60vw;
-    background: rgba(138, 3, 3, 0.28);
-    top: -20vw; left: -15vw;
-    animation-duration: 22s;
+    width: 75vw; height: 75vw;
+    background: radial-gradient(circle at 40% 40%, #800020 0%, #2a0008 80%);
+    top: -25vw; left: -20vw;
+    opacity: 0.55;
+    filter: blur(120px);
+    animation-duration: 20s;
   }
 
   .orb-purple {
-    width: 55vw; height: 55vw;
-    background: rgba(102, 2, 60, 0.32);
-    bottom: -22vw; right: -18vw;
-    animation-duration: 28s;
-    animation-delay: -8s;
+    width: 65vw; height: 65vw;
+    background: radial-gradient(circle at 60% 50%, #66023C 0%, #1a0020 80%);
+    bottom: -20vw; right: -25vw;
+    opacity: 0.6;
+    filter: blur(140px);
+    animation-duration: 26s;
+    animation-delay: -5s;
   }
 
   .orb-gold {
-    width: 28vw; height: 28vw;
-    background: rgba(212, 175, 55, 0.15);
-    top: 30%; left: 25%;
+    width: 45vw; height: 45vw;
+    background: radial-gradient(circle at 50% 60%, #E49B0F 0%, #5c3a00 80%);
+    bottom: -15vw; left: 25%;
+    opacity: 0.45;
+    filter: blur(100px);
     animation-duration: 18s;
-    animation-delay: -4s;
+    animation-delay: -9s;
+    mix-blend-mode: overlay;
   }
 
   .orb-blue {
-    width: 42vw; height: 42vw;
-    background: rgba(65, 105, 225, 0.18);
-    bottom: 5%; left: -12%;
-    animation-duration: 32s;
-    animation-delay: -12s;
+    width: 55vw; height: 55vw;
+    background: radial-gradient(circle at 30% 30%, #3F00FF 0%, #000033 80%);
+    top: 15%; right: -10vw;
+    opacity: 0.5;
+    filter: blur(130px);
+    animation-duration: 30s;
+    animation-delay: -15s;
   }
 
-  @keyframes drift {
-    0%, 100% { transform: translate(0, 0) scale(1); }
-    33% { transform: translate(30px, -40px) scale(1.1); }
-    66% { transform: translate(-25px, 25px) scale(0.95); }
+  @keyframes breathe {
+    0%, 100% { transform: scale(1) translate(0, 0); opacity: 0.5; }
+    33% { transform: scale(1.12) translate(30px, -40px); opacity: 0.7; }
+    66% { transform: scale(0.95) translate(-20px, 25px); opacity: 0.45; }
   }
 
-  @keyframes reveal {
-    from { opacity: 0; transform: translateY(35px) scale(0.97); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
+  .geometry {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+    pointer-events: none;
+    perspective: 1000px;
   }
 
-  .monolith {
+  .ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid rgba(228, 155, 15, 0.12);
+    box-shadow: 0 0 40px rgba(102, 2, 60, 0.08), inset 0 0 40px rgba(63, 0, 255, 0.05);
+  }
+
+  .ring1 { width: 85vh; height: 85vh; animation: spin 50s linear infinite; }
+  .ring2 { width: 100vh; height: 100vh; animation: spin 70s linear infinite reverse; border-color: rgba(128, 0, 32, 0.10); }
+  .ring3 { width: 115vh; height: 115vh; animation: spin 90s linear infinite; border-color: rgba(63, 0, 255, 0.07); border-style: dashed; }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .scanline {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 2px;
+    background: linear-gradient(90deg, transparent 0%, rgba(228, 155, 15, 0.5) 50%, transparent 100%);
+    box-shadow: 0 0 20px rgba(228, 155, 15, 0.3);
+    animation: scan 10s linear infinite;
+    z-index: 50;
+    pointer-events: none;
+    opacity: 0.7;
+  }
+
+  @keyframes scan {
+    0% { top: -5%; opacity: 0; }
+    10% { opacity: 0.7; }
+    90% { opacity: 0.7; }
+    100% { top: 105%; opacity: 0; }
+  }
+
+  .content {
     position: relative;
     z-index: 10;
-    width: 92%;
-    max-width: 540px;
-    padding: 3.8rem 2.5rem;
-    background: rgba(6, 0, 14, 0.58);
-    backdrop-filter: blur(32px) saturate(1.5);
-    -webkit-backdrop-filter: blur(32px) saturate(1.5);
-    border: 1px solid rgba(212, 175, 55, 0.1);
-    border-radius: 2px;
-    box-shadow:
-      0 0 0 1px rgba(212, 175, 55, 0.03),
-      0 40px 100px rgba(0, 0, 0, 0.8),
-      inset 0 1px 0 rgba(255, 255, 255, 0.02);
-    animation: reveal 1.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-    opacity: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 1.5rem;
+    max-width: 1000px;
+    margin: 0 auto;
+    gap: 4rem;
   }
 
-  .monolith::before {
-    content: '';
-    position: absolute;
-    top: -1px; left: 8%; right: 8%; height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.7), rgba(138, 3, 3, 0.5), rgba(65, 105, 225, 0.6), transparent);
-  }
-
-  h1 {
-    font-family: 'UnifrakturMaguntia', cursive;
-    font-size: clamp(3.8rem, 11vw, 6.4rem);
+  .title {
     text-align: center;
     line-height: 0.9;
-    margin-bottom: 3rem;
-    background: linear-gradient(135deg, #d4af37 0%, #ff4d4d 30%, #8a0303 55%, #66023c 80%, #4169e1 100%);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    animation: titleFloat 6s ease-in-out infinite;
+  }
+
+  @keyframes titleFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+  }
+
+  .title .fool, .title .schtick {
+    font-family: 'UnifrakturMaguntia', cursive;
+    font-size: clamp(5.5rem, 15vw, 12rem);
+    background: linear-gradient(135deg, #FFD700 0%, #E49B0F 20%, #800020 45%, #66023C 70%, #3F00FF 100%);
+    background-size: 250% 250%;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    filter: drop-shadow(0 4px 20px rgba(138, 3, 3, 0.35));
+    filter: drop-shadow(0 0 25px rgba(102, 2, 60, 0.6)) drop-shadow(0 0 70px rgba(128, 0, 32, 0.4));
+    animation: gradientShift 10s ease infinite;
     letter-spacing: -0.02em;
+    line-height: 1;
+  }
+
+  .title .of {
+    font-family: 'Tangerine', cursive;
+    font-size: clamp(3.5rem, 9vw, 7rem);
+    color: #E49B0F;
+    margin: -0.25em 0;
+    z-index: 2;
+    transform: rotate(-6deg) translateX(15px);
+    text-shadow: 0 0 50px rgba(228, 155, 15, 0.7), 0 4px 30px rgba(0,0,0,0.9);
+    font-weight: 700;
+    line-height: 1;
+    pointer-events: none;
+  }
+
+  @keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
   }
 
   .links {
     display: flex;
     flex-direction: column;
-    gap: 1.1rem;
-    align-items: center;
+    gap: 1.4rem;
+    width: 100%;
+    max-width: 520px;
+    position: relative;
   }
 
-  a {
-    display: inline-flex;
+  .links a {
+    display: flex;
     align-items: center;
     gap: 0.9rem;
-    width: 100%;
-    max-width: 360px;
-    font-family: 'Jost', sans-serif;
-    font-size: 0.82rem;
-    font-weight: 600;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
     text-decoration: none;
-    color: #b0a898;
-    padding: 1.05rem 2rem;
-    border-radius: 2px;
-    background: rgba(255, 255, 255, 0.015);
-    border: 1px solid rgba(255, 255, 255, 0.04);
-    position: relative;
-    overflow: hidden;
     transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+    position: relative;
+    padding: 0.85rem 1.8rem;
+    background: rgba(5, 2, 8, 0.35);
+    backdrop-filter: blur(12px) saturate(1.2);
+    -webkit-backdrop-filter: blur(12px) saturate(1.2);
+    border: 1px solid rgba(255,255,255,0.06);
+    overflow: hidden;
   }
 
-  a::before {
+  .links a::before {
     content: '';
     position: absolute;
-    top: 0; left: 0; width: 2px; height: 100%;
-    background: linear-gradient(180deg, #d4af37, #8a0303);
-    opacity: 0.35;
-    transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+    inset: 0;
+    background: linear-gradient(110deg, transparent 20%, rgba(255,255,255,0.03) 50%, transparent 80%);
+    transform: translateX(-100%);
+    transition: transform 0.6s ease;
   }
 
-  a svg, a i {
-    width: 1.15em;
-    height: 1.15em;
+  .links a:hover::before {
+    transform: translateX(100%);
+  }
+
+  a.x-link {
+    font-family: 'Fira Code', monospace;
+    font-size: 1.15rem;
+    color: #a5b3cc;
+    border-left: 3px solid #3F00FF;
+    letter-spacing: 0.08em;
+  }
+  a.x-link:hover {
+    color: #e0e6ff;
+    background: rgba(63, 0, 255, 0.08);
+    border-color: #5c3aff;
+    box-shadow: 0 0 30px rgba(63, 0, 255, 0.2), inset 0 0 20px rgba(63, 0, 255, 0.05);
+    transform: translateX(8px) scale(1.02);
+  }
+
+  a.ig-link {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-weight: 600;
+    font-size: 1.45rem;
+    color: #f0d0ff;
+    border-bottom: 1px solid rgba(228, 155, 15, 0.25);
+    border-radius: 4px 24px 4px 24px;
+  }
+  a.ig-link:hover {
+    color: #fff;
+    background: rgba(102, 2, 60, 0.15);
+    border-color: #E49B0F;
+    box-shadow: 0 8px 40px rgba(102, 2, 60, 0.25);
+    transform: translateY(-3px) scale(1.03);
+    letter-spacing: 0.04em;
+  }
+
+  a.tt-link {
+    font-family: 'Jost', sans-serif;
+    font-weight: 900;
+    font-size: 1.35rem;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    border: 1px solid rgba(255,255,255,0.1);
+    clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+  }
+  a.tt-link:hover {
+    color: #00f2ea;
+    text-shadow: 2px 0 #ff0050, -2px 0 #00f2ea;
+    background: rgba(0, 242, 234, 0.05);
+    transform: scale(1.04) rotate(-0.5deg);
+  }
+
+  a.fb-link {
+    font-family: 'UnifrakturMaguntia', cursive;
+    font-size: 1.55rem;
+    color: #e8e0ff;
+    border-top: 2px solid #800020;
+    border-radius: 0;
+    letter-spacing: 0.02em;
+  }
+  a.fb-link:hover {
+    color: #fff;
+    background: rgba(128, 0, 32, 0.12);
+    box-shadow: 0 0 40px rgba(128, 0, 32, 0.3);
+    border-color: #ff1a53;
+    transform: translateX(-6px) scale(1.02);
+  }
+
+  a.yt-link {
+    font-family: 'Jost', sans-serif;
+    font-weight: 700;
+    font-size: 1.3rem;
+    color: #ffd6d6;
+    border-right: 4px solid #66023C;
+    letter-spacing: 0.06em;
+  }
+  a.yt-link:hover {
+    color: #fff;
+    background: rgba(102, 2, 60, 0.15);
+    border-color: #ff0044;
+    box-shadow: 0 0 35px rgba(102, 2, 60, 0.35);
+    transform: translateX(6px) scale(1.02);
+  }
+
+  a.em-link {
+    font-family: 'Jost', sans-serif;
+    font-weight: 300;
+    font-size: 1.05rem;
+    color: #a090b0;
+    letter-spacing: 0.2em;
+    text-transform: lowercase;
+    border: 1px solid rgba(255,255,255,0.04);
+    background: rgba(5, 2, 8, 0.2);
+    justify-content: center;
+    padding: 1rem;
+  }
+  a.em-link:hover {
+    color: #E49B0F;
+    border-color: rgba(228, 155, 15, 0.3);
+    background: rgba(228, 155, 15, 0.05);
+    letter-spacing: 0.25em;
+    transform: scale(1.01);
+  }
+
+  .links a svg, .links a i {
+    width: 1.3em;
+    height: 1.3em;
     flex-shrink: 0;
-    font-size: 1.05em;
-    color: #c0b8a8;
-    transition: color 0.4s;
+    opacity: 0.85;
+    transition: all 0.4s ease;
   }
-
-  a:hover {
-    color: #f0ebe3;
-    background: rgba(212, 175, 55, 0.04);
-    transform: translateX(8px);
-  }
-
-  a:hover::before {
+  .links a:hover svg, .links a:hover i {
     opacity: 1;
-    width: 3px;
+    transform: scale(1.15) rotate(-5deg);
+    filter: drop-shadow(0 0 8px currentColor);
   }
 
-  a:hover svg, a:hover i { color: #fff; }
-
-  a:nth-child(1):hover { border-color: rgba(138, 3, 3, 0.4); box-shadow: -8px 0 40px rgba(138, 3, 3, 0.15); }
-  a:nth-child(1)::before { background: linear-gradient(180deg, #d4af37, #8a0303); }
-
-  a:nth-child(2):hover { border-color: rgba(102, 2, 60, 0.4); box-shadow: -8px 0 40px rgba(102, 2, 60, 0.15); }
-  a:nth-child(2)::before { background: linear-gradient(180deg, #d4af37, #66023c); }
-
-  a:nth-child(3):hover { border-color: rgba(212, 175, 55, 0.35); box-shadow: -8px 0 40px rgba(212, 175, 55, 0.12); }
-  a:nth-child(3)::before { background: linear-gradient(180deg, #ffec8b, #d4af37); }
-
-  a:nth-child(4):hover { border-color: rgba(65, 105, 225, 0.4); box-shadow: -8px 0 40px rgba(65, 105, 225, 0.15); }
-  a:nth-child(4)::before { background: linear-gradient(180deg, #87cefa, #4169e1); }
-
-  a:nth-child(5):hover { border-color: rgba(138, 3, 3, 0.4); box-shadow: -8px 0 40px rgba(138, 3, 3, 0.15); }
-  a:nth-child(5)::before { background: linear-gradient(180deg, #ff6b6b, #8a0303); }
-
-  a:nth-child(6):hover { border-color: rgba(212, 175, 55, 0.35); box-shadow: -8px 0 40px rgba(102, 2, 60, 0.15); }
-  a:nth-child(6)::before { background: linear-gradient(180deg, #d4af37, #66023c); }
+  .cursor-glow {
+    position: fixed;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(63, 0, 255, 0.15) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+    transition: left 0.1s ease, top 0.1s ease;
+    mix-blend-mode: screen;
+  }
 
   @media (max-width: 600px) {
-    .monolith { padding: 2.8rem 1.6rem; }
-    h1 { font-size: 3.4rem; }
-    a { font-size: 0.75rem; padding: 0.95rem 1.5rem; max-width: 300px; }
+    .content { gap: 2.5rem; padding: 2rem 1rem; }
+    .title .fool, .title .schtick { font-size: clamp(4rem, 18vw, 7rem); }
+    .title .of { font-size: clamp(2.5rem, 10vw, 4rem); }
+    .links a { padding: 0.75rem 1.2rem; }
+    .ring1, .ring2, .ring3 { display: none; }
   }
 </style>
 </head>
 <body>
 
-  <div class="noise"></div>
+  <div class="cursor-glow" id="cursorGlow"></div>
+  <div class="scanline"></div>
   <div class="vignette"></div>
+  
+  <div class="background">
+    <div class="orb orb-crimson"></div>
+    <div class="orb orb-purple"></div>
+    <div class="orb orb-gold"></div>
+    <div class="orb orb-blue"></div>
+  </div>
 
-  <div class="orb orb-crimson"></div>
-  <div class="orb orb-purple"></div>
-  <div class="orb orb-gold"></div>
-  <div class="orb orb-blue"></div>
+  <div class="geometry">
+    <div class="ring ring1"></div>
+    <div class="ring ring2"></div>
+    <div class="ring ring3"></div>
+  </div>
 
-  <div class="monolith">
-    <h1>Fool of Schtick</h1>
+  <div class="content">
+    <div class="title">
+      <div class="fool">Fool</div>
+      <div class="of">of</div>
+      <div class="schtick">Schtick</div>
+    </div>
 
     <div class="links">
-      <a href="https://x.com/foolofschtick" target="_blank">
+      <a href="https://x.com/foolofschtick" target="_blank" class="x-link">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
         X.com
       </a>
-      <a href="https://www.instagram.com/foolofschtick?igsh=MzRlODBiNWFlZA==" target="_blank">
+      <a href="https://www.instagram.com/foolofschtick?igsh=MzRlODBiNWFlZA==" target="_blank" class="ig-link">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
         Instagram
       </a>
-      <a href="https://www.tiktok.com/@foolofschtick?_r=1&_t=ZT-96t2iCgbA7y" target="_blank">
+      <a href="https://www.tiktok.com/@foolofschtick?_r=1&_t=ZT-96t2iCgbA7y" target="_blank" class="tt-link">
         <i class="fa-brands fa-tiktok" aria-hidden="true"></i>
         TikTok
       </a>
-      <a href="https://www.facebook.com/61590695035991/" target="_blank">
+      <a href="https://www.facebook.com/61590695035991/" target="_blank" class="fb-link">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
         Facebook
       </a>
-      <a href="http://www.youtube.com/@foolofschtick" target="_blank">
+      <a href="http://www.youtube.com/@foolofschtick" target="_blank" class="yt-link">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
         YouTube
       </a>
-      <a href="mailto:contact@foolofschtick.com">
+      <a href="mailto:contact@foolofschtick.com" class="em-link">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
-        Email
+        email
       </a>
     </div>
   </div>
+
+  <script>
+    const glow = document.getElementById('cursorGlow');
+    document.addEventListener('mousemove', (e) => {
+      glow.style.left = e.clientX + 'px';
+      glow.style.top = e.clientY + 'px';
+    });
+  </script>
 
 </body>
 </html>
