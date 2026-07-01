@@ -4,30 +4,32 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Fool of Schtick</title>
-<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&family=Futura:wght@700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=OCR+A&display=swap');
-  
-  * { margin: 0; 
-    padding: 0; 
-    box-sizing: border-box; 
+  @property --border-angle {
+    syntax: '<angle>';
+    initial-value: 0deg;
+    inherits: false;
   }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
 
   :root {
     --crimson: #DC143C;
-    --oxblood: #4A0404;
-    --gold: #D4AF37;
+    --oxblood: #0f0000;
+    --gold: #FFD700;
     --cadmium: #E69F00;
     --royal: #002366;
-    --ultramarine: #120A8F;
-    --tyrian: #66023C;
-    --void: #0a0a0f;
-    --mist: rgba(255, 248, 240, 0.03);
+    --ultramarine: #0a0044;
+    --tyrian: #2a0138;
+    --void: #030104;
+    --mx: 0.5;
+    --my: 0.5;
   }
 
   body {
-    font-family: 'Fira Code', monospace;
+    font-family: 'Fira Code', 'OCR A', 'Courier New', monospace;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -39,598 +41,594 @@
     cursor: crosshair;
   }
 
-  /* Film grain overlay */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-    pointer-events: none;
-    z-index: 100;
-    opacity: 0.4;
-  }
-
-  /* Scanline effect */
-  body::after {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background: repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 2px,
-      rgba(0, 0, 0, 0.03) 2px,
-      rgba(0, 0, 0, 0.03) 4px
-    );
-    pointer-events: none;
-    z-index: 101;
-  }
-
-  /* Dimensional orb field */
-  .orb-field {
+  /* === DIMENSIONAL BACKGROUND FIELD === */
+  .warp-field {
     position: fixed;
     inset: -50%;
     width: 200%;
     height: 200%;
     z-index: 0;
     pointer-events: none;
+    background: radial-gradient(circle at 50% 50%, var(--oxblood) 0%, var(--void) 50%);
   }
 
-  .orb {
+  .plasma {
     position: absolute;
     border-radius: 50%;
-    filter: blur(60px);
-    mix-blend-mode: screen;
-    will-change: transform;
-  }
-
-  .orb-core {
-    width: 40vw;
-    height: 40vw;
-    background: radial-gradient(circle, var(--crimson) 0%, transparent 70%);
-    top: 20%;
-    left: 30%;
-    animation: breathe 12s ease-in-out infinite;
-    filter: blur(80px);
-  }
-
-  .orb-abyss {
-    width: 50vw;
-    height: 50vw;
-    background: radial-gradient(circle, var(--royal) 0%, var(--ultramarine) 40%, transparent 70%);
-    bottom: 10%;
-    right: 20%;
-    animation: breathe 15s ease-in-out infinite reverse;
     filter: blur(100px);
-    opacity: 0.8;
+    mix-blend-mode: screen;
+    pointer-events: none;
+    will-change: transform;
+    opacity: 0.55;
   }
 
-  .orb-gold {
-    width: 25vw;
-    height: 25vw;
+  .plasma-crimson {
+    width: 55vw; height: 55vw;
+    background: radial-gradient(circle, var(--crimson) 0%, transparent 65%);
+    top: -10%; left: -15%;
+    animation: lissajous-1 28s ease-in-out infinite;
+  }
+
+  .plasma-royal {
+    width: 50vw; height: 50vw;
+    background: radial-gradient(circle, var(--royal) 0%, var(--ultramarine) 40%, transparent 65%);
+    bottom: -20%; right: -10%;
+    animation: lissajous-2 32s ease-in-out infinite reverse;
+    mix-blend-mode: color-dodge;
+    opacity: 0.45;
+  }
+
+  .plasma-gold {
+    width: 35vw; height: 35vw;
     background: radial-gradient(circle, var(--gold) 0%, var(--cadmium) 30%, transparent 60%);
-    top: 60%;
-    left: 15%;
-    animation: drift-gold 18s ease-in-out infinite;
-    filter: blur(50px);
-    opacity: 0.6;
+    top: 40%; left: 20%;
+    animation: lissajous-3 24s ease-in-out infinite;
+    mix-blend-mode: overlay;
+    opacity: 0.35;
   }
 
-  .orb-void {
-    width: 35vw;
-    height: 35vw;
-    background: radial-gradient(circle, var(--oxblood) 0%, var(--tyrian) 20%, transparent 65%);
-    top: 10%;
-    right: 10%;
-    animation: drift-void 20s ease-in-out infinite;
-    filter: blur(90px);
-    opacity: 0.5;
+  .plasma-oxblood {
+    width: 80vw; height: 80vw;
+    background: radial-gradient(circle, var(--oxblood) 0%, transparent 55%);
+    top: 10%; left: 30%;
+    animation: breathe-slow 40s ease-in-out infinite;
     mix-blend-mode: multiply;
-  }
-
-  .orb-ghost {
-    width: 60vw;
-    height: 60vw;
-    background: radial-gradient(circle, rgba(212, 175, 55, 0.1) 0%, transparent 50%);
-    top: 40%;
-    left: 20%;
-    animation: pulse-ghost 25s ease-in-out infinite;
+    opacity: 0.8;
     filter: blur(120px);
   }
 
-  @keyframes breathe {
-    0%, 100% { transform: scale(1) translate(0, 0); }
-    33% { transform: scale(1.15) translate(30px, -20px); }
-    66% { transform: scale(0.9) translate(-20px, 30px); }
+  .plasma-tyrian {
+    width: 30vw; height: 30vw;
+    background: radial-gradient(circle, var(--tyrian) 0%, transparent 60%);
+    top: 10%; right: 25%;
+    animation: drift-slow 35s ease-in-out infinite reverse;
+    mix-blend-mode: multiply;
+    opacity: 0.4;
+    filter: blur(90px);
   }
 
-  @keyframes drift-gold {
-    0%, 100% { transform: translate(0, 0) rotate(0deg); }
-    25% { transform: translate(50px, -30px) rotate(5deg); }
-    50% { transform: translate(-30px, 50px) rotate(-3deg); }
-    75% { transform: translate(20px, 20px) rotate(2deg); }
+  /* Mesh bleed layer */
+  .mesh-bleed {
+    position: absolute;
+    inset: 0;
+    background: conic-gradient(from 0deg at 40% 60%, rgba(220,20,60,0.15), rgba(0,35,102,0.15), rgba(255,215,0,0.08), rgba(0,35,102,0.15), rgba(220,20,60,0.15));
+    animation: mesh-rotate 25s linear infinite;
+    filter: blur(80px);
+    mix-blend-mode: overlay;
+    opacity: 0.6;
+    transform-origin: center;
   }
 
-  @keyframes drift-void {
+  @keyframes mesh-rotate {
+    to { transform: rotate(360deg); }
+  }
+
+  @keyframes lissajous-1 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    25% { transform: translate(60px, -40px) scale(1.1); }
+    50% { transform: translate(-30px, 50px) scale(0.95); }
+    75% { transform: translate(40px, 30px) scale(1.05); }
+  }
+
+  @keyframes lissajous-2 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(-50px, -30px) scale(1.08); }
+    66% { transform: translate(30px, -50px) scale(0.92); }
+  }
+
+  @keyframes lissajous-3 {
+    0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); }
+    50% { transform: translate(-40px, 40px) scale(1.12) rotate(180deg); }
+  }
+
+  @keyframes breathe-slow {
+    0%, 100% { transform: scale(1); opacity: 0.7; }
+    50% { transform: scale(1.1); opacity: 0.9; }
+  }
+
+  @keyframes drift-slow {
     0%, 100% { transform: translate(0, 0); }
-    33% { transform: translate(-40px, 30px); }
-    66% { transform: translate(30px, -40px); }
+    50% { transform: translate(-60px, -40px); }
   }
 
-  @keyframes pulse-ghost {
-    0%, 100% { opacity: 0.3; transform: scale(1); }
-    50% { opacity: 0.6; transform: scale(1.2); }
-  }
-
-  /* Chromatic aberration layer */
-  .chromatic-wrap {
+  /* === FILM GRAIN === */
+  .grain {
     position: fixed;
     inset: 0;
-    z-index: 1;
     pointer-events: none;
+    z-index: 50;
+    opacity: 0.06;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+    mix-blend-mode: overlay;
+  }
+
+  /* === VIGNETTE === */
+  .vignette {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 40;
+    box-shadow: inset 0 0 250px rgba(0,0,0,0.85), inset 0 0 60px rgba(15,0,0,0.6);
+  }
+
+  /* === HIDDEN LATTICE === */
+  .lattice {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 5;
+    background-image: 
+      linear-gradient(rgba(255,215,0,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,215,0,0.04) 1px, transparent 1px);
+    background-size: 60px 60px;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+  }
+  body.lattice-active .lattice {
+    opacity: 1;
+  }
+
+  /* === CHROMATIC MOUSE ABERRATION === */
+  .chromatic {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 30;
     mix-blend-mode: screen;
     opacity: 0;
-    transition: opacity 0.3s;
+    transition: opacity 0.4s ease;
   }
-
-  body:hover .chromatic-wrap {
-    opacity: 0.08;
+  body:hover .chromatic {
+    opacity: 0.12;
   }
-
+  .chromatic-r, .chromatic-b {
+    position: absolute;
+    inset: -4px;
+    background: radial-gradient(circle at calc(var(--mx) * 100%) calc(var(--my) * 100%), rgba(220,20,60,0.3) 0%, transparent 50%);
+    mix-blend-mode: screen;
+  }
   .chromatic-r {
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(circle at 30% 40%, rgba(255, 0, 0, 0.3) 0%, transparent 50%);
-    animation: chromatic-shift 8s ease-in-out infinite;
+    filter: blur(6px);
+    transform: translate(-4px, -2px);
   }
-
   .chromatic-b {
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(circle at 70% 60%, rgba(0, 0, 255, 0.3) 0%, transparent 50%);
-    animation: chromatic-shift 8s ease-in-out infinite reverse;
+    filter: blur(6px);
+    transform: translate(4px, 2px);
   }
 
-  @keyframes chromatic-shift {
-    0%, 100% { transform: translate(0, 0); }
-    50% { transform: translate(10px, -10px); }
-  }
-
-  /* Main content structure */
+  /* === CONTENT === */
   .content {
     position: relative;
     z-index: 10;
     text-align: center;
     padding: 2rem;
-    max-width: 900px;
+    max-width: 800px;
     width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4rem;
-  }
-
-  /* Title treatment - dimensional typography */
-  .title-wrap {
-    position: relative;
-    perspective: 1000px;
-  }
-
-  h1 {
-    font-family: 'Futura', 'Trebuchet MS', sans-serif;
-    font-weight: 900;
-    font-size: clamp(4rem, 12vw, 10rem);
-    color: #f0f0f0;
-    line-height: 0.85;
-    letter-spacing: -0.04em;
-    text-transform: uppercase;
-    position: relative;
+    perspective: 1200px;
     transform-style: preserve-3d;
-    animation: title-assemble 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    opacity: 0;
+    transition: transform 0.3s ease-out;
   }
 
-  h1 .word {
-    display: block;
+  /* === TITLE === */
+  h1 {
+    font-family: 'Futura', 'Trebuchet MS', 'Arial Black', sans-serif;
+    font-weight: 900;
+    font-size: clamp(4.5rem, 14vw, 11rem);
+    color: #f0ede8;
+    line-height: 0.9;
+    margin-bottom: 4rem;
+    letter-spacing: -0.03em;
+    text-transform: uppercase;
+    text-shadow:
+      0 0 0 var(--gold),
+      2px 2px 0 rgba(230,159,0,0.4),
+      4px 4px 0 rgba(220,20,60,0.25),
+      8px 8px 0 rgba(0,35,102,0.2),
+      0 0 40px rgba(220,20,60,0.15),
+      0 0 80px rgba(0,35,102,0.1),
+      0 20px 60px rgba(0,0,0,0.6);
     position: relative;
+    animation: title-enter 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards,
+               title-breathe 10s ease-in-out infinite 1.5s;
+    opacity: 0;
+    transform-style: preserve-3d;
   }
 
-  h1 .word:nth-child(1) {
-    font-size: 1.2em;
-    color: var(--gold);
-    text-shadow: 
-      0 0 20px rgba(212, 175, 55, 0.3),
-      0 0 60px rgba(212, 175, 55, 0.1);
-    animation: word-float6s ease-in-out infinite;
-    animation-delay: 0.2s;
-  }
-
-  h1 .word:nth-child(2) {
-    font-size: 0.35em;
-    font-weight: 300;
-    letter-spacing: 0.5em;
-    color: var(--crimson);
-    margin: 0.2em 0;
-    opacity: 0.9;
-  }
-
-  h1 .word:nth-child(3) {
-    font-size: 0.9em;
-    color: #fff;
-    text-shadow: 
-      0 0 30px rgba(255, 255, 255, 0.2),
-      0 0 80px rgba(220, 20, 60, 0.15);
-    animation: word-float 7s ease-in-out infinite reverse;
-    animation-delay: 0.5s;
-  }
-
-  @keyframes title-assemble {
+  @keyframes title-enter {
     0% {
       opacity: 0;
-      transform: translateZ(-200px) rotateX(15deg);
+      transform: translateZ(-100px) scale(0.8);
       filter: blur(20px);
     }
     100% {
       opacity: 1;
-      transform: translateZ(0) rotateX(0);
+      transform: translateZ(0) scale(1);
       filter: blur(0);
     }
   }
 
-  @keyframes word-float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-8px); }
+  @keyframes title-breathe {
+    0%, 100% { 
+      text-shadow:
+        0 0 0 var(--gold),
+        2px 2px 0 rgba(230,159,0,0.4),
+        4px 4px 0 rgba(220,20,60,0.25),
+        8px 8px 0 rgba(0,35,102,0.2),
+        0 0 40px rgba(220,20,60,0.15),
+        0 0 80px rgba(0,35,102,0.1),
+        0 20px 60px rgba(0,0,0,0.6);
+    }
+    50% {
+      text-shadow:
+        0 0 0 var(--gold),
+        3px 3px 0 rgba(230,159,0,0.5),
+        6px 6px 0 rgba(220,20,60,0.35),
+        12px 12px 0 rgba(0,35,102,0.25),
+        0 0 60px rgba(220,20,60,0.2),
+        0 0 120px rgba(0,35,102,0.15),
+        0 30px 80px rgba(0,0,0,0.7);
+    }
   }
 
-  /* Constellation link network */
-  .link-constellation {
-    position: relative;
-    width: 100%;
-    max-width: 600px;
-    height: 400px;
-    opacity: 0;
-    animation: fade-up 1s ease-out 1.5s forwards;
-  }
-
-  .link-node {
-    position: absolute;
+  /* === LINKS === */
+  .links {
     display: flex;
     flex-direction: column;
+    gap: 1.4rem;
     align-items: center;
-    gap: 0.5rem;
-    text-decoration: none;
-    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
- }
-
-  .link-node .glyph {
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(10, 10, 15, 0.6);
-    border: 1px solid rgba(212, 175, 55, 0.2);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    color: var(--gold);
-    font-size: 1.3rem;
     position: relative;
-    overflow: hidden;
-    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
-  .link-node .glyph::before {
+  a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    font-family: 'Fira Code', 'OCR A', 'Courier New', monospace;
+    font-size: 1.35rem;
+    font-weight: 400;
+    text-decoration: none;
+    color: #f0ede8;
+    padding: 0.85rem 2.8rem;
+    border-radius: 50px;
+    background: rgba(3, 1, 4, 0.45);
+    backdrop-filter: blur(20px) saturate(1.3);
+    -webkit-backdrop-filter: blur(20px) saturate(1.3);
+    border: 1px solid rgba(255, 215, 0, 0.15);
+    box-shadow: 
+      0 4px 24px rgba(0,0,0,0.3),
+      inset 0 1px 0 rgba(255,255,255,0.05);
+    transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    overflow: hidden;
+    letter-spacing: -0.01em;
+  }
+
+  a::before {
     content: '';
     position: absolute;
     inset: -2px;
-    border-radius: 50%;
-    background: conic-gradient(from0deg, var(--gold), var(--crimson), var(--royal), var(--gold));
+    border-radius: 50px;
+    background: conic-gradient(from var(--border-angle, 0deg), var(--gold), var(--crimson), var(--royal), var(--gold));
     opacity: 0;
-    transition: opacity 0.4s;
+    transition: opacity 0.4s ease;
     z-index: -1;
+    filter: blur(4px);
   }
 
-  .link-node .glyph::after {
+  a::after {
     content: '';
     position: absolute;
     inset: 1px;
-    border-radius: 50%;
-    background: var(--void);
+    border-radius: 50px;
+    background: rgba(3, 1, 4, 0.85);
     z-index: -1;
   }
 
-  .link-node .label {
-    font-family: 'Fira Code', monospace;
-    font-size: 0.65rem;
-    color: rgba(240, 240, 240, 0.5);
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    transition: all 0.3s;
-    opacity: 0;
-    transform: translateY(-5px);
+  a svg, a i {
+    width: 1.1em;
+    height: 1.1em;
+    flex-shrink: 0;
+    font-size: 1.1em;
+    line-height: 1;
+    transition: transform 0.3s ease;
   }
 
-  .link-node:hover .glyph {
-    transform: scale(1.15);
+  /* Retained rotations from original, slightly more extreme */
+  a:nth-child(1) { transform: rotate(-2.2deg); }
+  a:nth-child(2) { transform: rotate(1.5deg); }
+  a:nth-child(3) { transform: rotate(-1.1deg); }
+  a:nth-child(4) { transform: rotate(1.8deg); }
+  a:nth-child(5) { transform: rotate(-0.6deg); }
+  a:nth-child(6) { transform: rotate(0.9deg); }
+
+  a:hover {
+    transform: scale(1.07) rotate(0deg);
     border-color: transparent;
     box-shadow: 
-      0 0 30px rgba(212, 175, 55, 0.2),
-      0 0 60px rgba(220, 20, 60, 0.1);
+      0 8px 40px rgba(220, 20, 60, 0.15),
+      0 12px 50px rgba(0, 35, 102, 0.1),
+      0 0 30px rgba(255, 215, 0, 0.1),
+      inset 0 1px 0 rgba(255,255,255,0.1);
+    color: #fff;
+    letter-spacing: 0.05em;
   }
 
-  .link-node:hover .glyph::before {
+  a:hover::before {
     opacity: 1;
-    animation: rotate-gradient 3s linear infinite;
+    animation: spin-conic 3s linear infinite;
   }
 
-  .link-node:hover .label {
-    opacity: 1;
-    transform: translateY(0);
-    color: var(--gold);
+  a:hover svg, a:hover i {
+    transform: scale(1.2);
+    filter: drop-shadow(0 0 8px rgba(255,215,0,0.4));
   }
 
-  @keyframes rotate-gradient {
-    to { transform: rotate(360deg); }
+  @keyframes spin-conic {
+    to { --border-angle: 360deg; }
   }
 
-  /* Constellation positions */
-  .node-x { top: 5%; left: 50%; transform: translateX(-50%); }
-  .node-ig { top: 25%; right: 5%; }
-  .node-tt { top: 60%; right: 10%; }
-  .node-fb { top: 60%; left: 10%; }
-  .node-yt { top: 25%; left: 5%; }
-  .node-em { bottom: 5%; left: 50%; transform: translateX(-50%); }
-
-  /* Connecting lines SVG */
-  .constellation-lines {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    z-index: -1;
-  }
-
-  .constellation-lines line {
-    stroke: rgba(212, 175, 55, 0.08);
-    stroke-width: 1;
-    stroke-dasharray: 5 10;
-    animation: dash-flow 20s linear infinite;
-  }
-
-  @keyframes dash-flow {
-    to { stroke-dashoffset: -300; }
-  }
-
-  /* Vignette frame */
-  .vignette {
+  /* === DEBRIS PARTICLES === */
+  .debris {
     position: fixed;
     inset: 0;
-    pointer-events: none;
-    z-index: 5;
-    box-shadow: inset 0 0 150px rgba(0, 0, 0, 0.5);
-  }
-
-  /* Interactive lens distortion */
-  .lens {
-    position: fixed;
-    width: 300px;
-    height: 300px;
-    border-radius: 50%;
-    pointer-events: none;
-    z-index: 50;
-    background: radial-gradient(circle, rgba(255,255,255,0.02) 0%, transparent 70%);
-    transform: translate(-50%, -50%);
-    opacity: 0;
-    transition: opacity 0.3s;
-    mix-blend-mode: overlay;
-  }
-
-  body:hover .lens {
-    opacity: 1;
-  }
-
-  /* Ambient particles */
-  .particle {
-    position: fixed;
-    width: 2px;
-    height: 2px;
-    background: var(--gold);
-    border-radius: 50%;
     pointer-events: none;
     z-index: 2;
+    overflow: hidden;
+  }
+  .particle {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    border-radius: 50%;
+    pointer-events: none;
     opacity: 0;
-    animation: particle-drift linear infinite;
+    animation: particle-rise linear infinite;
   }
 
-  @keyframes particle-drift {
+  @keyframes particle-rise {
     0% {
+      transform: translateY(110vh) translateX(0) scale(0);
       opacity: 0;
-      transform: translateY(100vh) scale(0);
     }
-    10% {
-      opacity: 0.8;
-    }
-    90% {
-      opacity: 0.8;
-    }
+    10% { opacity: 0.8; }
+    90% { opacity: 0.8; }
     100% {
+      transform: translateY(-10vh) translateX(20px) scale(1.5);
       opacity: 0;
-      transform: translateY(-10vh) scale(1);
     }
   }
 
-  /* Responsive */
+  /* === GHOST TRAILS === */
+  .ghost {
+    position: fixed;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 20;
+    background: radial-gradient(circle, rgba(255,215,0,0.5) 0%, transparent 70%);
+    animation: ghost-fade 0.8s ease-out forwards;
+  }
+  @keyframes ghost-fade {
+    0% { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(0); }
+  }
+
+  /* === SHOCKWAVE CANVAS === */
+  .shockwave {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 25;
+  }
+
+  /* === RESPONSIVE === */
   @media (max-width: 600px) {
-    .link-constellation {
-      height: 350px;
+    h1 { 
+      font-size: clamp(3.5rem, 14vw, 6rem); 
+      margin-bottom: 2.8rem; 
+      text-shadow:
+        0 0 0 var(--gold),
+        1px 1px 0 rgba(230,159,0,0.4),
+        2px 2px 0 rgba(220,20,60,0.25),
+        4px 4px 0 rgba(0,35,102,0.2),
+        0 0 30px rgba(220,20,60,0.15),
+        0 10px 30px rgba(0,0,0,0.6);
     }
-    
-    .link-node .glyph {
-      width: 48px;
-      height: 48px;
- font-size: 1.1rem;
+    a { 
+      font-size: 1.15rem; 
+      padding: 0.75rem 2.2rem; 
     }
-    
-    .link-node .label {
-      font-size: 0.6rem;
-    }
-    
-    h1 {
-      font-size: clamp(3rem, 15vw, 5rem);
+    .content {
+      gap: 2rem;
     }
   }
 
-  /* Reduced motion */
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
       animation-duration: 0.01ms !important;
       animation-iteration-count: 1 !important;
- transition-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
     }
   }
 </style>
 </head>
 <body>
 
-  <div class="orb-field">
-    <div class="orb orb-core"></div>
-    <div class="orb orb-abyss"></div>
-    <div class="orb orb-gold"></div>
-    <div class="orb orb-void"></div>
-    <div class="orb orb-ghost"></div>
+  <div class="warp-field">
+    <div class="plasma plasma-crimson"></div>
+    <div class="plasma plasma-royal"></div>
+    <div class="plasma plasma-gold"></div>
+    <div class="plasma plasma-oxblood"></div>
+    <div class="plasma plasma-tyrian"></div>
+    <div class="mesh-bleed"></div>
   </div>
 
-  <div class="chromatic-wrap">
+  <div class="lattice"></div>
+  <div class="chromatic">
     <div class="chromatic-r"></div>
     <div class="chromatic-b"></div>
   </div>
-
+  <canvas class="shockwave" id="shockwave"></canvas>
   <div class="vignette"></div>
-  <div class="lens" id="lens"></div>
+  <div class="grain"></div>
+  <div class="debris" id="debris"></div>
 
-  <!-- Ambient particles generated by JS -->
-
-  <div class="content">
-    
-    <div class="title-wrap">
-      <h1>
-        <span class="word">Fool</span>
-        <span class="word">of</span>
-        <span class="word">Schtick</span>
-      </h1>
-    </div>
-
-    <div class="link-constellation">
-      <svg class="constellation-lines" viewBox="0 0 600 400" preserveAspectRatio="xMidYMid meet">
-        <line x1="300" y1="20" x2="540" y2="100" />
-        <line x1="540" y1="100" x2="520" y2="240" />
-        <line x1="520" y1="240" x2="300" y2="380" />
-        <line x1="300" y1="380" x2="80" y2="240" />
-        <line x1="80" y1="240" x2="60" y2="100" />
-        <line x1="60" y1="100" x2="300" y2="20" />
-        <line x1="300" y1="20" x2="300" y2="380" />
-        <line x1="60" y1="100" x2="520" y2="240" />
-        <line x1="540" y1="100" x2="80" y2="240" />
-      </svg>
-
-      <a href="https://x.com/foolofschtick" target="_blank" class="link-node node-x">
-        <div class="glyph">
-          <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-        </div>
-        <span class="label">X.com</span>
+  <div class="content" id="content">
+    <h1>Fool of Schtick</h1>
+    <div class="links">
+      <a href="https://x.com/foolofschtick" target="_blank">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+        X.com
       </a>
-
-      <a href="https://www.instagram.com/foolofschtick?igsh=MzRlODBiNWFlZA==" target="_blank" class="link-node node-ig">
-        <div class="glyph">
-          <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
-        </div>
-        <span class="label">Instagram</span>
+      <a href="https://www.instagram.com/foolofschtick?igsh=MzRlODBiNWFlZA==" target="_blank">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+        Instagram
       </a>
-
-      <a href="https://www.tiktok.com/@foolofschtick?_r=1&_t=ZT-96t2iCgbA7y" target="_blank" class="link-node node-tt">
-        <div class="glyph">
-          <i class="fa-brands fa-tiktok" aria-hidden="true"></i>
-        </div>
-        <span class="label">TikTok</span>
+      <a href="https://www.tiktok.com/@foolofschtick?_r=1&_t=ZT-96t2iCgbA7y" target="_blank">
+        <i class="fa-brands fa-tiktok" aria-hidden="true"></i>
+        TikTok
       </a>
-
-      <a href="https://www.facebook.com/61590695035991/" target="_blank" class="link-node node-fb">
-        <div class="glyph">
-          <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-        </div>
-        <span class="label">Facebook</span>
+      <a href="https://www.facebook.com/61590695035991/" target="_blank">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+        Facebook
       </a>
-
-      <a href="http://www.youtube.com/@foolofschtick" target="_blank" class="link-node node-yt">
-        <div class="glyph">
-          <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
-        </div>
-        <span class="label">YouTube</span>
+      <a href="http://www.youtube.com/@foolofschtick" target="_blank">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+        YouTube
       </a>
-
-      <a href="mailto:contact@foolofschtick.com" class="link-node node-em">
-        <div class="glyph">
-          <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
-        </div>
-        <span class="label">Email</span>
+      <a href="mailto:contact@foolofschtick.com">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+        Email
       </a>
     </div>
-
   </div>
 
   <script>
- // Lens distortion follow
-    const lens = document.getElementById('lens');
-    let mouseX = 0, mouseY = 0;
-    let lensX = 0, lensY = 0;
-
+    // === 3D TILT ON CONTENT ===
+    const content = document.getElementById('content');
     document.addEventListener('mousemove', (e) => {
-      mouseX = e.clientX;
-      mouseY = e.clientY;
-    });
-
-    function animateLens() {
-      lensX += (mouseX - lensX) * 0.1;
-      lensY += (mouseY - lensY) * 0.1;
-      lens.style.left = lensX + 'px';
-      lens.style.top = lensY + 'px';
-      requestAnimationFrame(animateLens);
-    }
-    animateLens();
-
-    // Generate ambient particles
-    function createParticle() {
-      const particle = document.createElement('div');
-      particle.className = 'particle';
-      particle.style.left = Math.random() * 100 + 'vw';
-      particle.style.animationDuration = (Math.random() * 10 + 10) + 's';
-      particle.style.animationDelay = Math.random() * 5 + 's';
-      const size = Math.random() * 3 + 1;
-      particle.style.width = size + 'px';
-      particle.style.height = size + 'px';
+      const x = (e.clientX / window.innerWidth - 0.5);
+      const y = (e.clientY / window.innerHeight - 0.5);
+      document.body.style.setProperty('--mx', x + 0.5);
+      document.body.style.setProperty('--my', y + 0.5);
+      content.style.transform = `rotateY(${x * 8}deg) rotateX(${-y * 8}deg)`;
       
-      const colors = ['#D4AF37', '#DC143C', '#002366', '#E69F00'];
-      particle.style.background = colors[Math.floor(Math.random() * colors.length)];
-      
-      document.body.appendChild(particle);
-      
-      setTimeout(() => particle.remove(), 25000);
-    }
-
-    setInterval(createParticle, 800);
-
- // Subtle parallax on orbs
-    document.addEventListener('mousemove', (e) => {
-      const x = (e.clientX / window.innerWidth - 0.5) * 2;
-      const y = (e.clientY / window.innerHeight - 0.5) * 2;
-      
-      document.querySelectorAll('.orb').forEach((orb, i) => {
-        const depth = (i + 1) * 15;
+      // Parallax warp field
+      document.querySelectorAll('.plasma').forEach((orb, i) => {
+        const depth = (i + 1) * 12;
         orb.style.transform = `translate(${x * depth}px, ${y * depth}px)`;
       });
     });
+
+    // === PARTICLE DEBRIS ===
+    const debris = document.getElementById('debris');
+    const colors = ['#FFD700', '#DC143C', '#002366', '#E69F00', '#f0ede8'];
+    function spawnParticle() {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      p.style.left = Math.random() * 100 + 'vw';
+      p.style.animationDuration = (Math.random() * 12 + 8) + 's';
+      p.style.animationDelay = Math.random() * 4 + 's';
+      const size = Math.random() * 2 + 1;
+      p.style.width = size + 'px';
+      p.style.height = size + 'px';
+      p.style.background = colors[Math.floor(Math.random() * colors.length)];
+      debris.appendChild(p);
+      setTimeout(() => p.remove(), 22000);
+    }
+    setInterval(spawnParticle, 600);
+
+    // === GHOST TRAILS ===
+    document.addEventListener('mousemove', (e) => {
+      if (Math.random() > 0.82) return;
+      const g = document.createElement('div');
+      g.className = 'ghost';
+      g.style.left = (e.clientX - 4) + 'px';
+      g.style.top = (e.clientY - 4) + 'px';
+      document.body.appendChild(g);
+      setTimeout(() => g.remove(), 800);
+    });
+
+    // === FAST-MOUSE LATTICE REVEAL ===
+    let lastX = 0, lastY = 0, lastTime = Date.now();
+    document.addEventListener('mousemove', (e) => {
+      const now = Date.now();
+      const dt = now - lastTime;
+      const dx = e.clientX - lastX;
+      const dy = e.clientY - lastY;
+      const speed = Math.sqrt(dx*dx + dy*dy) / (dt || 1);
+      lastX = e.clientX; lastY = e.clientY; lastTime = now;
+      if (speed > 2.5) {
+        document.body.classList.add('lattice-active');
+        clearTimeout(window._latTimer);
+        window._latTimer = setTimeout(() => document.body.classList.remove('lattice-active'), 400);
+      }
+    });
+
+    // === SHOCKWAVE CANVAS ===
+    const canvas = document.getElementById('shockwave');
+    const ctx = canvas.getContext('2d');
+    let waves = [];
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    document.addEventListener('click', (e) => {
+      waves.push({ x: e.clientX, y: e.clientY, r: 0, a: 1 });
+    });
+
+    function draw() {
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      waves = waves.filter(w => w.a > 0);
+      waves.forEach(w => {
+        w.r += 10;
+        w.a -= 0.025;
+        // Gold ring
+        ctx.beginPath();
+        ctx.arc(w.x, w.y, w.r, 0, Math.PI*2);
+        ctx.strokeStyle = `rgba(255,215,0,${w.a * 0.5})`;
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        // Crimson echo
+        ctx.beginPath();
+        ctx.arc(w.x, w.y, w.r * 0.7, 0, Math.PI*2);
+        ctx.strokeStyle = `rgba(220,20,60,${w.a * 0.3})`;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        // Royal core
+        ctx.beginPath();
+        ctx.arc(w.x, w.y, w.r * 0.4, 0, Math.PI*2);
+        ctx.strokeStyle = `rgba(0,35,102,${w.a * 0.2})`;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      });
+      requestAnimationFrame(draw);
+    }
+    draw();
   </script>
 
 </body>
