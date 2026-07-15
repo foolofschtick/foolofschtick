@@ -16,7 +16,7 @@
     min-height: 100vh;
     display: flex;
     flex-direction: column;
- }
+  }
 
   /* ===== TOP BAR ===== */
   .top-bar {
@@ -72,28 +72,37 @@
   /* ===== MAIN SPACER ===== */
   main {
     flex: 1;
- display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  /* ===== VIDEO ===== */
-  .video-container {
-    width: 100%;
-    padding: 40px;
     display: flex;
-    justify-content: center;
     align-items: center;
-    background: #ffffff;
+    justify-content: center;
   }
 
-  video {
-    max-width: 100%;
-    max-height: 70vh;
-    height: auto;
-    display: block;
+  /* ===== YOUTUBE ===== */
+  .youtube-container {
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 40px;
+  }
+
+  .youtube-wrapper {
+    position: relative;
+    width: 100%;
+    padding-bottom: 56.25%;
+    height: 0;
     border: 1.5px solid #000000;
     border-radius: 4px;
+    overflow: hidden;
+    background: #000000;
+  }
+
+  .youtube-wrapper iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
   }
 
   /* ===== RESPONSIVE ===== */
@@ -108,7 +117,7 @@
       justify-content: flex-start;
       width: 100%;
     }
-    .video-container {
+    .youtube-container {
       padding: 20px;
     }
   }
@@ -119,7 +128,7 @@
   <div class="top-bar">
     <div class="logo">
       <!-- Replace this src with your GitHub raw image URL -->
-      <img src="https://raw.githubusercontent.com/foolofschtick/foolofschtick/refs/heads/main/FoolofSchtick.png" alt="Logo">
+      <img src="YOUR_LOGO_URL_HERE" alt="Logo">
     </div>
 
     <nav class="links">
@@ -135,7 +144,7 @@
         <i class="fa-brands fa-tiktok" aria-hidden="true"></i>
         TikTok
       </a>
-      <a href="https://www.facebook.com/profile.php?id=61591839185315" target="_blank">
+      <a href="https://www.facebook.com/61590695035991/" target="_blank">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
         Facebook
       </a>
@@ -152,15 +161,15 @@
 
   <main></main>
 
-  <div class="video-container">
-    <!-- 
-      Host your fat MP4 via GitHub Releases, Cloudflare R2, AWS S3, or any direct CDN.
-      GitHub Repos choke on large files; Releases handles up to 2GB.
- -->
-    <video controls poster="YOUR_POSTER_IMAGE_HERE">
-      <source src="YOUR_MP4_URL_HERE" type="video/mp4">
-      Your browser doesn't support the video tag, you absolute fossil.
-    </video>
+  <div class="youtube-container">
+    <div class="youtube-wrapper">
+      <!-- Replace YOUR_VIDEO_ID with your actual YouTube video ID -->
+      <iframe        src="https://www.youtube.com/embed/YOUR_VIDEO_ID" 
+        title="YouTube video player" 
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+        allowfullscreen>
+      </iframe>
+    </div>
   </div>
 
 </body>
